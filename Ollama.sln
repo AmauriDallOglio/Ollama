@@ -5,6 +5,12 @@ VisualStudioVersion = 17.13.35828.75 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama.Api", "Ollama.Api\Ollama.Api.csproj", "{05F7836B-BC86-4FB3-826C-02887F3D4B86}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nucleo", "Nucleo", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama.Aplicacao", "Ollama.Aplicacao\Ollama.Aplicacao.csproj", "{FC7CD40A-0304-407B-B4A3-E74C77A24040}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollama.Console", "Ollama.Console\Ollama.Console.csproj", "{5A041B8B-AEE5-4368-A326-739C4142B8EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +21,20 @@ Global
 		{05F7836B-BC86-4FB3-826C-02887F3D4B86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05F7836B-BC86-4FB3-826C-02887F3D4B86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05F7836B-BC86-4FB3-826C-02887F3D4B86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC7CD40A-0304-407B-B4A3-E74C77A24040}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC7CD40A-0304-407B-B4A3-E74C77A24040}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC7CD40A-0304-407B-B4A3-E74C77A24040}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC7CD40A-0304-407B-B4A3-E74C77A24040}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A041B8B-AEE5-4368-A326-739C4142B8EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A041B8B-AEE5-4368-A326-739C4142B8EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A041B8B-AEE5-4368-A326-739C4142B8EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A041B8B-AEE5-4368-A326-739C4142B8EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FC7CD40A-0304-407B-B4A3-E74C77A24040} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {00CAC72B-E38F-426B-AFF2-81426B439EE8}
