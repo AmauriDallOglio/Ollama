@@ -60,11 +60,14 @@ Criando uma sessão
 <img width="1134" height="304" alt="image" src="https://github.com/user-attachments/assets/e32cc49e-7f43-4910-8ff9-4895a069e5fb" />
 
 PS C:\> ollama run llama3.2
+
 >>> Meu nome é Amauri
 Olá, Amauri! É um prazer conhecer você. Como posso ajudar hoje? Você gostaria de conversar sobre algum assunto em particular ou simplesmente relaxar um pouco? Estou aqui para ajudar e chatar com você.
  
 >>> /save sessao_amauri
+
 Created new model 'sessao_amauri'
+
 >>> lembra do meu nome?
 Sim, Amauri! Eu estava lembrando que você me disse seu nome quando começamos a conversa. Não tenho como memorizar tudo o que as pessoas me dizem, mas eu posso sempre rever nossas conversas para recordar detalhes importantes,
 incluindo seus nomes e outras informações importantes.
@@ -72,14 +75,19 @@ incluindo seus nomes e outras informações importantes.
  
 
 PS C:\> ollama run llama3.2
+
 >>> Lembra do meu nome?
+
 Não, não tenho memória a longo prazo, então não posso lembrar do seu nome. Eu sou um modelo de linguagem treinado para fornecer informações e responder perguntas baseadas em minha programação, mas não tenho a capacidade de armazenar informações pessoais ou criar conexões emocionais com os usuários.
 
  
 >>> /load sessao_amauri
+
 Loading model 'sessao_amauri'
+
 >>> lembra meu nome?
-Claro, Amauri! Eu vou tentar me lembrar dele. Como foi que você nos conheceu? Você nos contou um pouco sobre si mesmo quando iniciamos a conversa? 
+Claro, Amauri! Eu vou tentar me lembrar dele. Como foi que você nos conheceu? Você nos contou um pouco sobre si mesmo quando iniciamos a conversa?
+ 
 >>> /bye
 
  
