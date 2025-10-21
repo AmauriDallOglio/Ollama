@@ -12,7 +12,7 @@ namespace Ollama.Api
             // Configurações do appsettings.json
             builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("Ollama"));
 
-            // 🧩 Adiciona HttpClient para o serviço OllamaService
+            // Adiciona HttpClient para o serviço OllamaService
             builder.Services.AddHttpClient<OllamaServico>();
 
             // Adiciona controladores

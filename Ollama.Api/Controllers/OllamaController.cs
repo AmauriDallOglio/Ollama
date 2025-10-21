@@ -94,9 +94,9 @@ namespace Ollama.Api.Controllers
         //}
     }
 
-    public class PerguntaRequest
-    {
-        public string Pergunta { get; set; } = string.Empty;
-    }
+    //public class PerguntaRequest
+    //{
+    //    public string Pergunta { get; set; } = string.Empty;
+    //}
 
 }
