@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Ollama.Aplicacao.Servico;
+using Ollama.Aplicacao.Util;
+using System.Diagnostics;
 
 namespace Ollama.Api.Controllers
 {
@@ -7,26 +9,46 @@ namespace Ollama.Api.Controllers
     [Route("api/[controller]")]
     public class OllamaController : ControllerBase
     {
-
+        private readonly ILogger<OllamaController> _logger;
         private readonly OllamaServico _OllamaServico;
+        private readonly HelperConsoleColor _helper;
 
-        public OllamaController(OllamaServico ollamaServico)
+        public OllamaController(OllamaServico ollamaServico, ILogger<OllamaController> logger, HelperConsoleColor helper)
         {
             _OllamaServico = ollamaServico;
+            _logger = logger;
+            _helper = helper;   
         }
 
         [HttpGet("pergunta")]
         public async Task<IActionResult> Perguntar([FromQuery] string texto)
         {
+            var total = Stopwatch.StartNew();
+
             if (string.IsNullOrWhiteSpace(texto))
-                return BadRequest(new { erro = "Informe uma pergunta válida." });
+            {
+                string mensagem = "Informe uma pergunta válida.";
+
+                _helper.Erro($"{mensagem}");
+                return BadRequest(new { erro = mensagem });
+            }
+       
 
             var resposta = await _OllamaServico.PerguntarAsync(texto);
-            return Ok(new
+
+            total.Stop();
+ 
+
+            var objeto = new
             {
                 pergunta = texto,
-                resposta
-            });
+                resposta,
+                tempoTotal = $"{total.ElapsedMilliseconds} ms"
+            };
+
+
+            _helper.Informacao($"{objeto}");
+            return Ok(objeto);
         }
 
 
