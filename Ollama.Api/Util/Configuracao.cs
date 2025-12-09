@@ -49,24 +49,47 @@ namespace Ollama.Api.Util
             // builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Query", LogLevel.Debug);
 
  
-            // ----------------------------------------------
-            // CRIAR LOGGER TEMPORÁRIO MANUAL
-            // (funciona ANTES do app.Build())
-            // ----------------------------------------------
+            //// ----------------------------------------------
+            //// CRIAR LOGGER TEMPORÁRIO MANUAL
+            //// (funciona ANTES do app.Build())
+            //// ----------------------------------------------
 
 
-            _loggerTemp = LoggerFactory.Create(logging =>
+            //_loggerTemp = LoggerFactory.Create(logging =>
+            //{
+            //    logging.AddConsole();
+            //    logging.AddDebug();
+            //}).CreateLogger("PipelineBuilder");
+
+            //_loggerTemp.LogWarning(" ***** Amauri Versão 1.0 ***** ");
+            //_loggerTemp.LogInformation(" Logging nativo configurado para o builder.");
+            //_loggerTemp.LogWarning(" Pipeline do builder iniciado.");
+            //_loggerTemp.LogInformation(" Azure Log Diagnostics configurado.");
+
+        }
+
+        // ================================================================
+        //  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
+        // ================================================================
+        public static ILogger LogPipelineBuilder(WebApplicationBuilder builder)
+        {
+            ILogger _loggerTemp = LoggerFactory.Create(logging =>
             {
                 logging.AddConsole();
                 logging.AddDebug();
-            }).CreateLogger("PipelineBuilder");
+            }).CreateLogger("LogPipelineBuilder");
 
             _loggerTemp.LogWarning(" ***** Amauri Versão 1.0 ***** ");
             _loggerTemp.LogInformation(" Logging nativo configurado para o builder.");
             _loggerTemp.LogWarning(" Pipeline do builder iniciado.");
             _loggerTemp.LogInformation(" Azure Log Diagnostics configurado.");
 
+            return _loggerTemp;
         }
+
+
+
+
 
         // ================================================================
         //  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
@@ -84,6 +107,13 @@ namespace Ollama.Api.Util
 
             // HttpClient para o OllamaServico
             builder.Services.AddHttpClient<OllamaServico>();
+
+
+            // Registrar Contexto e OllamaServico
+            builder.Services.AddSingleton<ContextoServico>(); // contexto em memória
+ 
+ 
+
 
             // Se tiver mais serviços da aplicação, registre aqui:
             // builder.Services.AddScoped<OutroServico>();

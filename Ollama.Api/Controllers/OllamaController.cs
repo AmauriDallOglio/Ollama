@@ -2,6 +2,7 @@
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 using System.Diagnostics;
+using static Ollama.Aplicacao.Servico.ContextoServico;
 
 namespace Ollama.Api.Controllers
 {
@@ -50,6 +51,33 @@ namespace Ollama.Api.Controllers
             _helper.Informacao($"{objeto}");
             return Ok(objeto);
         }
+
+
+        [HttpPost("PerguntarComContexto")]
+        public async Task<IActionResult> PerguntarComContexto([FromBody] PerguntaRequest req, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(req.Assunto))
+                return BadRequest(new { erro = "Assunto obrigatório." });
+
+            try
+            {
+                var resp = await _OllamaServico.PerguntarComContextoAsync(req.Assunto, req.TopK, ct);
+
+
+                _helper.Informacao($"{resp}");
+
+                return Ok(new { sucesso = true, resp.Resposta, tempoMs = resp.TempoMs });
+            }
+            catch (TimeoutException)
+            {
+                return StatusCode(504, new { sucesso = false, mensagem = "Timeout ao chamar Ollama." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { sucesso = false, mensagem = ex.Message });
+            }
+        }
+
 
 
         //private readonly HttpClient _httpClient;

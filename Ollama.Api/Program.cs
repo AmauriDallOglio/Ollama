@@ -1,6 +1,5 @@
 ﻿using Ollama.Api.Util;
 using Ollama.Aplicacao.Dto;
-using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 
 namespace Ollama.Api
@@ -10,21 +9,22 @@ namespace Ollama.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-   
-
-
+            // ----------------------------------------------
+            // CRIAR LOGGER TEMPORÁRIO MANUAL
+            // (funciona ANTES do app.Build())
+            // ----------------------------------------------
 
             // Configurações do appsettings.json
             builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("Ollama"));
 
+
+            ILogger logPipelineBuilder = Configuracao.LogPipelineBuilder(builder);
+ 
             // configura logging nativo .NET
             Configuracao.ConfigurarDotNetLogging(builder);
 
             // registra serviços personalizados
             Configuracao.RegistrarServicos(builder);
-
-
 
             // Adiciona controladores
             builder.Services.AddControllers();
@@ -48,14 +48,14 @@ namespace Ollama.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+
+
+
             var app = builder.Build();
 
             var helper = app.Services.GetRequiredService<HelperConsoleColor>();
             helper.Informacao("Aplicação iniciando...");
 
-
-
-            
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
