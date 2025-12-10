@@ -12,6 +12,7 @@ namespace Ollama.Aplicacao.Servico
             _documentos.Add(new DocumentoContexto("1", "História da API", "APIs são contratos entre sistemas..."));
             _documentos.Add(new DocumentoContexto("2", "O que é Ollama", "Ollama é um servidor de modelos LLM que permite..."));
             _documentos.Add(new DocumentoContexto("3", "Uso em C#", "Para usar Ollama em C#, faça HTTP POST para /api/generate..."));
+            _documentos.Add(new DocumentoContexto("4", "Batman", "É um super herói da DC..."));
         }
 
         // Permite adicionar documentos dinamicamente
@@ -21,7 +22,7 @@ namespace Ollama.Aplicacao.Servico
         }
 
         // Busca simples por similaridade: pontua documentos pela frequência de termos (TF simples)
-        public IEnumerable<DocumentoContexto> BuscarDocumentos(string assunto, int topK = 3)
+        public IEnumerable<DocumentoContexto> BuscarDocumentos(string assunto, int topK = 4)
         {
             if (string.IsNullOrWhiteSpace(assunto)) 
                 return Enumerable.Empty<DocumentoContexto>();
@@ -63,7 +64,7 @@ namespace Ollama.Aplicacao.Servico
             );
         public record PerguntaRequest(
             string Assunto, 
-            int TopK = 3
+            int TopK = 4
             );
         public record OllamaResponseDto(
             string Resposta, 
