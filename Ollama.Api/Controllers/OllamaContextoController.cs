@@ -8,13 +8,13 @@ namespace Ollama.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class OllamaController : ControllerBase
+    public class OllamaContextoController : ControllerBase
     {
-        private readonly ILogger<OllamaController> _logger;
+        private readonly ILogger<OllamaPromptController> _logger;
         private readonly OllamaServico _OllamaServico;
         private readonly HelperConsoleColor _helper;
 
-        public OllamaController(OllamaServico ollamaServico, ILogger<OllamaController> logger, HelperConsoleColor helper)
+        public OllamaContextoController(OllamaServico ollamaServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
         {
             _OllamaServico = ollamaServico;
             _logger = logger;
