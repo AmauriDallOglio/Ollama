@@ -1,8 +1,12 @@
-﻿namespace Ollama.Aplicacao.Servico
+﻿using Ollama.Aplicacao.Dto;
+using System.Text;
+
+namespace Ollama.Aplicacao.Servico
 {
     public class PromptEngineeringServico
     {
-        public PromptDto PromptManutencao(string Pergunta)
+        private static readonly Random _random = new Random();
+        public PromptResponseDto PromptManutencao(string Pergunta)
         {
             string persona = @"Você é um especialista em manutenção de máquinas industriais, construção civil, predial e veículos voltados ao mundo industrial, 
                 com amplo conhecimento em manutenção preventiva, preditiva e corretiva. 
@@ -25,11 +29,11 @@
                   * Caldeiras: inspecionar válvulas de segurança, controlar pressão e temperatura, realizar testes de estanqueidade, limpar tubulações de combustão.
          
                 ";
-            PromptDto promptDto = new PromptDto(persona, contexto, Pergunta);
+            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, Pergunta);
             return promptDto;
         }
 
-        public PromptDto PromptRevisaoTexto(string textoOriginal)
+        public PromptResponseDto PromptRevisaoTexto(string textoOriginal)
         {
             string persona = @"Você é um especialista em revisão e estruturação de textos acadêmicos, técnicos e literários. 
                 Sua função é organizar e formatar textos de forma clara, lógica e padronizada, sem alterar o conteúdo original. 
@@ -49,12 +53,14 @@
                     Capítulo 3 - Conclusão
                 - Saída final sempre em **texto organizado e numerado**, sem comentários extras.";
 
-            PromptDto promptDto = new PromptDto(persona, contexto, textoOriginal);
+            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, textoOriginal);
             return promptDto;
         }
 
-        public PromptDto PromptOrdemServico(string listaOrdensServico, string manutentor)
+        public PromptResponseDto PromptOrdemServico(string manutentor)
         {
+  
+
             string persona = @$"
                 Você é um especialista em PCM (Planejamento e Controle da Manutenção) e organizador do trabalho dos manutentores. 
                 Sua função é analisar a lista de Ordens de Serviço recebida, avaliar os prazos e status, e organizar as atividades como se fosse o chefe da manutenção orientando o manutentor {manutentor}. 
@@ -77,11 +83,14 @@
                 - Apresente a lista completa das ordens de serviço recebida, organizada por data de cadastro, do mais antigo para o mais recente.
             ";
 
-            PromptDto promptDto = new PromptDto(persona, contexto, listaOrdensServico);
+            List<OrdemServicoDto>? listaOrdensServico = GerarListaOrdensServico(manutentor);
+            var prompt = ConverterParaTexto(listaOrdensServico);
+
+            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
             return promptDto;
         }
 
-        public PromptDto PromptOrdemServicoHtml(string listaOrdensServico, string manutentor)
+        public PromptResponseDto PromptOrdemServicoHtml(string manutentor)
         {
             string persona = @$"
                 Você é um especialista em PCM (Planejamento e Controle da Manutenção) e organizador do trabalho dos manutentores. 
@@ -100,44 +109,79 @@
                 - Gere a resposta em html e css para ser apresentada em um navegador.
             ";
 
-            PromptDto promptDto = new PromptDto(persona, contexto, listaOrdensServico);
+            List<OrdemServicoDto>? listaOrdensServico = GerarListaOrdensServico(manutentor);
+            var prompt = ConverterParaTexto(listaOrdensServico);
+
+            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
             return promptDto;
         }
 
-        public class PromptDto
-        {
-            public List<MensagemDto> Mensagens { get; set; }
+         
 
-            public PromptDto(string persona, string contexto, string pergunta)
+ 
+
+        public List<OrdemServicoDto> GerarListaOrdensServico(string nomeManutentor)
+        {
+            var ordens = new List<OrdemServicoDto>();
+            DateTime hoje = DateTime.Now;
+            int codigo = 1;
+
+            // 10 passadas
+            for (int i = 1; i <= 8; i++)
             {
-                Mensagens = new List<MensagemDto>
+                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(-i), nomeManutentor, "Manutentor 2"));
+            }
+
+            // 5 no dia atual
+            for (int i = 0; i < 12; i++)
             {
-                //A persona diz ao modelo quem ele é e como deve se comportar. O texto define papel,
-                //estilo e regras. Sempre vai no system (ou no início do prompt).
-                new MensagemDto("system",  $"Persona: {persona}"),
-                //Fornece informações que a IA pode usar, nada além disso
-                new MensagemDto("system", $"Contexto: {contexto}"),
-                //A pergunta é o que o usuário quer saber, enviada como user: 
-                new MensagemDto("user",  $"Pergunta: {pergunta}")
+                ordens.Add(CriarOrdem(codigo++, hoje, nomeManutentor, "Manutentor 2"));
+            }
+
+            // 15 futuras
+            for (int i = 1; i <= 15; i++)
+            {
+                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(i), nomeManutentor, "Manutentor 2"));
+            }
+
+            return ordens;
+        }
+
+        private static OrdemServicoDto CriarOrdem(int codigo, DateTime data, string manutentor1, string manutentor2)
+        {
+            return new OrdemServicoDto
+            {
+                Codigo = codigo.ToString(),
+                DataCadastro = data,
+                Status = GerarStatusAleatorio(),
+                TempoEstimadoHoras = (int)Math.Round(_random.NextDouble() * 8 + 1, 2), // entre 1 e 9 horas
+                Manutentor = codigo % 2 == 0 ? manutentor1 : manutentor2
             };
-            }
-
-            public string FormataToString()
-            {
-                return string.Join("\n", Mensagens.Select(m => $"{m.Papel.ToUpper()}: {m.Conteudo}"));
-            }
         }
 
-        public class MensagemDto
+        private static StatusOrdemServico GerarStatusAleatorio()
         {
-            public string Papel { get; set; }   // system, user, assistant
-            public string Conteudo { get; set; }
-
-            public MensagemDto(string papel, string conteudo)
-            {
-                Papel = papel;
-                Conteudo = conteudo;
-            }
+            var valores = Enum.GetValues(typeof(StatusOrdemServico));
+            return (StatusOrdemServico)valores.GetValue(_random.Next(valores.Length))!;
         }
+
+        public string ConverterParaTexto(List<OrdemServicoDto> ordens)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("Lista de Ordens de Serviço:");
+            foreach (var os in ordens)
+            {
+                sb.AppendLine($"- Código: {os.Codigo}, Data: {os.DataCadastro:dd/MM/yyyy}, " +
+                              $"Status: {os.Status}, Tempo Estimado: {os.TempoEstimadoHoras}h, " +
+                              $"Manutentor: {os.Manutentor}");
+            }
+            return sb.ToString();
+        }
+
+ 
+
+
+
+
     }
 }

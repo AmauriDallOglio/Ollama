@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
-using System.Diagnostics;
-using static Ollama.Aplicacao.Servico.ContextoServico;
 
 namespace Ollama.Api.Controllers
 {
@@ -24,14 +23,14 @@ namespace Ollama.Api.Controllers
 
 
         [HttpPost("PerguntaEmGeral")]
-        public async Task<IActionResult> PerguntaEmGeral([FromBody] PerguntaRequest request)
+        public async Task<IActionResult> PerguntaEmGeral([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Assunto))
+            if (string.IsNullOrWhiteSpace(pergunta))
                 return BadRequest("A pergunta não pode ser vazia.");
 
             try
             {
-                var resposta = await _OllamaServico.PerguntarAsync(request.Assunto);
+                string resposta = await _OllamaServico.ProcessaPromptAsync(pergunta, cancellationToken);
           
                 // return Ok(new { resposta = response.Text() });
                 return Content(resposta, "application/json");
@@ -44,7 +43,45 @@ namespace Ollama.Api.Controllers
         }
 
 
+        [HttpPost("EspecialistaOrdemServico")]
+        public async Task<IActionResult> EspecialistaOrdemServico([FromQuery] string manutentor, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(manutentor))
+                return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
 
-       
+          
+            PromptResponseDto promptDto = new PromptEngineeringServico().PromptOrdemServico(manutentor);
+
+            string texto = promptDto.FormataToString();
+            string resultado = await _OllamaServico.ProcessaPromptAsync(texto, cancellationToken);
+
+         
+
+            //var json Ok(new
+            //{
+            //    Pergunta = request.Pergunta,
+            //    Resposta = response.Text
+            //});
+
+            return Content(resultado, "application/json");
+
+        }
+
+
+        [HttpPost("EspecialistaOrdemServicoHtml")]
+        public async Task<IActionResult> EspecialistaOrdemServicoHtml([FromQuery] string manutentor, CancellationToken cancellationToken)
+        {
+            if ( string.IsNullOrWhiteSpace(manutentor))
+                return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
+
+    
+            PromptResponseDto promptDto = new PromptEngineeringServico().PromptOrdemServicoHtml(manutentor);
+
+            string texto = promptDto.FormataToString();
+            string resultado = await _OllamaServico.ProcessaPromptAsync(texto, cancellationToken);
+
+            return Content(resultado, "application/json");
+        }
+
     }
 }

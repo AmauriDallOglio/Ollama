@@ -110,7 +110,7 @@ namespace Ollama.Api.Util
 
 
             // Registrar Contexto e OllamaServico
-            builder.Services.AddSingleton<ContextoServico>(); // contexto em memória
+            builder.Services.AddSingleton<PromptDocumentoServico>(); // contexto em memória
  
  
 

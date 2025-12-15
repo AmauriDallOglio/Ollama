@@ -2,7 +2,6 @@
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 using System.Diagnostics;
-using static Ollama.Aplicacao.Servico.ContextoServico;
 
 namespace Ollama.Api.Controllers
 {
@@ -13,24 +12,28 @@ namespace Ollama.Api.Controllers
         private readonly ILogger<OllamaPromptController> _logger;
         private readonly OllamaServico _OllamaServico;
         private readonly HelperConsoleColor _helper;
+        private readonly PromptDocumentoServico _contextoServico;
 
-        public OllamaContextoController(OllamaServico ollamaServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
+        public OllamaContextoController(OllamaServico ollamaServico, PromptDocumentoServico contextoServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
         {
             _OllamaServico = ollamaServico;
             _logger = logger;
-            _helper = helper;   
+            _helper = helper;
+            _contextoServico = contextoServico;
         }
 
-        [HttpGet("Perguntar")]
-        public async Task<IActionResult> Perguntar([FromQuery] string texto)
+        [HttpGet("PerguntaEmGeral")]
+        public async Task<IActionResult> PerguntaEmGeral([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(texto))
+                var tempo = Stopwatch.StartNew();
+
+                if (string.IsNullOrWhiteSpace(pergunta))
                     return BadRequest(new { erro = "Assunto obrigatório." });
 
-                var total = Stopwatch.StartNew();
-                if (string.IsNullOrWhiteSpace(texto))
+     
+                if (string.IsNullOrWhiteSpace(pergunta))
                 {
                     string mensagem = "Informe uma pergunta válida.";
 
@@ -38,14 +41,14 @@ namespace Ollama.Api.Controllers
                     return BadRequest(new { erro = mensagem });
                 }
 
-                var resposta = await _OllamaServico.PerguntarAsync(texto);
-                total.Stop();
+                var resposta = await _OllamaServico.ProcessaPromptAsync(pergunta, cancellationToken);
 
+                tempo.Stop();
                 var objeto = new
                 {
-                    pergunta = texto,
+                    pergunta = pergunta,
                     resposta,
-                    tempoTotal = $"{total.ElapsedMilliseconds} ms"
+                    Tempo = $"{tempo.ElapsedMilliseconds} ms"
                 };
 
                 _helper.Informacao($"{objeto}");
@@ -62,24 +65,33 @@ namespace Ollama.Api.Controllers
         }
 
         [HttpPost("PerguntarComContexto")]
-        public async Task<IActionResult> PerguntarComContexto([FromQuery] PerguntaRequest req, CancellationToken ct)
+        public async Task<IActionResult> PerguntarComContexto([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(req.Assunto))
+                var tempo = Stopwatch.StartNew();
+                if (string.IsNullOrWhiteSpace(pergunta))
                     return BadRequest(new { erro = "Assunto obrigatório." });
 
-                var resp = await _OllamaServico.PerguntarComContextoAsync(req.Assunto, req.TopK, ct);
+                string prompt = _contextoServico.ObterPromptComBaseDocumentos(pergunta, cancellationToken);
+                if (string.IsNullOrEmpty(prompt))
+                {
+                    return BadRequest(new { erro = "Sem resultado para o assunto informado!" });
+                }
+
+                var resp = await _OllamaServico.ProcessaPromptContextoAsync(prompt, cancellationToken);
                 _helper.Informacao($"{resp}");
-                return Ok(new { sucesso = true, resp.Resposta, tempoMs = resp.TempoMs });
+                tempo.Stop();
+
+                return Ok(new { Sucesso = true, resp, Tempo = $"{tempo.ElapsedMilliseconds} ms" });
             }
             catch (TimeoutException)
             {
-                return StatusCode(504, new { sucesso = false, mensagem = "Timeout ao chamar Ollama." });
+                return StatusCode(504, new { Sucesso = false, mensagem = "Timeout ao chamar Ollama.", Tempo = 0 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { sucesso = false, mensagem = ex.Message });
+                return StatusCode(500, new { sucesso = false, mensagem = ex.Message, Tempo = 0 });
             }
         }
     }
