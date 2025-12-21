@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ollama.Aplicacao.Dto;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 
@@ -106,6 +107,71 @@ namespace Ollama.Aplicacao.Servico
 
             //stopwatch.Stop();
             // return new OllamaResponseDto(textoResposta, stopwatch.ElapsedMilliseconds);
+        }
+
+        public async Task<string> PerguntarDockerAsync(string prompt, CancellationToken cancellationToken)
+        {
+            var respostaFinal = new StringBuilder();
+            try
+            {
+                using var _httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromMinutes(10)
+                };
+                var payload = new
+                {
+                    model = "ai/llama3.2",
+                    prompt = prompt,
+                    stream = true
+                };
+
+                var content = new StringContent(
+                    JsonSerializer.Serialize(payload),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await _httpClient.PostAsync(
+                    "http://localhost:11434/api/generate",
+                    content,
+                    cancellationToken
+                );
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var erro = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogError("Erro ao comunicar com Ollama: {Erro}", erro);
+                    return $"Erro ao comunicar com o Ollama: {erro}";
+
+                }
+
+                using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                using var reader = new StreamReader(stream);
+
+                while (!reader.EndOfStream)
+                {
+                    var linha = await reader.ReadLineAsync(cancellationToken);
+                    if (string.IsNullOrWhiteSpace(linha)) continue;
+
+                    var json = JsonDocument.Parse(linha);
+                    if (json.RootElement.TryGetProperty("response", out var parte))
+                    {
+                        respostaFinal.Append(parte.GetString());
+                    }
+                }
+
+                return respostaFinal.ToString().Trim();
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError("Tempo de resposta excedido. A operação foi cancelada após o tempo limite configurado.");
+                return $"Tempo de resposta excedido. A operação foi cancelada após o tempo limite configurado. {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Erro inesperado.");
+                return $"Erro inesperado.  {ex.Message}";
+            }
         }
     }
 }
