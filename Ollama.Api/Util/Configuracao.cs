@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 
@@ -96,6 +97,19 @@ namespace Ollama.Api.Util
         // ================================================================
         public static void RegistrarServicos(WebApplicationBuilder builder)
         {
+
+            // Configurações do appsettings.json
+          //  builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("OllamaLocal"));
+
+            builder.Services.Configure<OllamaAppSettingsDto>(
+            "Local",
+            builder.Configuration.GetSection("OllamaLocal"));
+
+            builder.Services.Configure<OllamaAppSettingsDto>(
+            "Docker",
+            builder.Configuration.GetSection("OllamaDocker"));
+
+
             //Desabilitar totalmente o ModelState automático do .NET para permitir validação e tratamento manual
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {

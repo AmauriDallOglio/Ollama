@@ -30,7 +30,7 @@ namespace Ollama.Api.Controllers
 
             try
             {
-                string resposta = await _OllamaServico.ProcessaPromptAsync(pergunta, cancellationToken);
+                string resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
           
                 // return Ok(new { resposta = response.Text() });
                 return Content(resposta, "application/json");
@@ -50,10 +50,10 @@ namespace Ollama.Api.Controllers
                 return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
 
           
-            PromptResponseDto promptDto = new PromptEngineeringServico().PromptOrdemServico(manutentor);
+            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServico(manutentor);
 
             string texto = promptDto.FormataToString();
-            string resultado = await _OllamaServico.ProcessaPromptAsync(texto, cancellationToken);
+            string resultado = await _OllamaServico.ProcessaPromptLocalAsync(texto, cancellationToken);
 
          
 
@@ -75,10 +75,10 @@ namespace Ollama.Api.Controllers
                 return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
 
     
-            PromptResponseDto promptDto = new PromptEngineeringServico().PromptOrdemServicoHtml(manutentor);
+            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServicoHtml(manutentor);
 
             string texto = promptDto.FormataToString();
-            string resultado = await _OllamaServico.ProcessaPromptAsync(texto, cancellationToken);
+            string resultado = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, cancellationToken);
 
             return Content(resultado, "application/json");
         }

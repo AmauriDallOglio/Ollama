@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Ollama.Aplicacao.Servico
 {
-    public class PromptEngineeringServico
+    public class EngenhariaPromptServico
     {
         private static readonly Random _random = new Random();
         public PromptResponseDto PromptManutencao(string Pergunta)

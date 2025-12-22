@@ -14,8 +14,7 @@ namespace Ollama.Api
             // (funciona ANTES do app.Build())
             // ----------------------------------------------
 
-            // Configurações do appsettings.json
-            builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("Ollama"));
+
 
 
             ILogger logPipelineBuilder = Configuracao.LogPipelineBuilder(builder);

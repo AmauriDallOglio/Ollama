@@ -41,7 +41,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(new { erro = mensagem });
                 }
 
-                var resposta = await _OllamaServico.ProcessaPromptAsync(pergunta, cancellationToken);
+                var resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
 
                 tempo.Stop();
                 var objeto = new
@@ -79,7 +79,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(new { erro = "Sem resultado para o assunto informado!" });
                 }
 
-                var resp = await _OllamaServico.ProcessaPromptContextoAsync(prompt, cancellationToken);
+                var resp = await _OllamaServico.ProcessaPromptLocalContextoAsync(prompt, cancellationToken);
                 _helper.Informacao($"{resp}");
                 tempo.Stop();
 

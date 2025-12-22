@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
+using System.Diagnostics;
 
 namespace Ollama.Api.Controllers
 {
@@ -23,14 +24,33 @@ namespace Ollama.Api.Controllers
         }
 
         [HttpGet("PerguntaDocker")]
-        public async Task<IActionResult> PerguntaDocker([FromQuery] string texto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PerguntaDocker([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(texto))
-                return BadRequest(new { erro = "Informe uma pergunta válida." });
+            try
+            {
+                var tempo = Stopwatch.StartNew();
+                if (string.IsNullOrWhiteSpace(pergunta))
+                    return BadRequest(new { erro = "Informe uma pergunta válida." });
 
 
-            var resposta = await _OllamaServico.PerguntarDockerAsync(texto, cancellationToken);
-            return Content(resposta, "application/json");
+                var resposta = await _OllamaServico.ProcessaPromptDockerAsync(pergunta, cancellationToken);
+                tempo.Stop();
+                var objeto = new
+                {
+                    pergunta = pergunta,
+                    resposta,
+                    Tempo = $"{tempo.ElapsedMilliseconds} ms"
+                };
+
+                _helper.Informacao($"{objeto}");
+                return Ok(objeto);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+   
         }
 
     }
