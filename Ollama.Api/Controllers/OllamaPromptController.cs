@@ -2,6 +2,7 @@
 using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
+using System.Diagnostics;
 
 namespace Ollama.Api.Controllers
 {
@@ -25,20 +26,32 @@ namespace Ollama.Api.Controllers
         [HttpPost("PerguntaEmGeral")]
         public async Task<IActionResult> PerguntaEmGeral([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(pergunta))
-                return BadRequest("A pergunta não pode ser vazia.");
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
 
             try
             {
+                if (string.IsNullOrWhiteSpace(pergunta))
+                {
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Informe uma pergunta válida.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
+                }
+
                 string resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
-          
-                // return Ok(new { resposta = response.Text() });
-                return Content(resposta, "application/json");
+
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro na chamada da API Gemini: {ex.Message}");
-                return StatusCode(500, new { error = "Ocorreu um erro ao se comunicar com a API Gemini.", details = ex.Message });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, $"Ocorreu um erro ao se comunicar com a servidor Ollama local. {ex.Message} ", tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
         }
 
@@ -46,24 +59,41 @@ namespace Ollama.Api.Controllers
         [HttpPost("EspecialistaOrdemServico")]
         public async Task<IActionResult> EspecialistaOrdemServico([FromQuery] string manutentor, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(manutentor))
-                return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
+            try
+            {
+ 
+                if (string.IsNullOrWhiteSpace(manutentor))
+                {
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(manutentor, "O nome do manutentor não pode ser vazio.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
+                }
 
-          
-            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServico(manutentor);
 
-            string texto = promptDto.FormataToString();
-            string resultado = await _OllamaServico.ProcessaPromptLocalAsync(texto, cancellationToken);
+                PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServico(manutentor);
 
-         
+                string texto = promptDto.FormataToString();
+                string resposta = await _OllamaServico.ProcessaPromptLocalAsync(texto, cancellationToken);
 
-            //var json Ok(new
-            //{
-            //    Pergunta = request.Pergunta,
-            //    Resposta = response.Text
-            //});
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(manutentor, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
+            }
+            catch (Exception ex)
+            {
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(manutentor, $"Ocorreu um erro ao se comunicar com a servidor Ollama local. {ex.Message} ", tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
+            }
 
-            return Content(resultado, "application/json");
+
+
+           
 
         }
 
@@ -71,16 +101,37 @@ namespace Ollama.Api.Controllers
         [HttpPost("EspecialistaOrdemServicoHtml")]
         public async Task<IActionResult> EspecialistaOrdemServicoHtml([FromQuery] string manutentor, CancellationToken cancellationToken)
         {
-            if ( string.IsNullOrWhiteSpace(manutentor))
-                return BadRequest(new { erro = "O nome do manutentor não pode ser vazio." });
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(manutentor))
+                {
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(manutentor, "O nome do manutentor não pode ser vazio.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
+                }
 
-    
-            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServicoHtml(manutentor);
 
-            string texto = promptDto.FormataToString();
-            string resultado = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, cancellationToken);
+                PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServicoHtml(manutentor);
 
-            return Content(resultado, "application/json");
+                string texto = promptDto.FormataToString();
+                string resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, cancellationToken);
+
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(manutentor, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
+            }
+            catch (Exception ex)
+            {
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(manutentor, $"Ocorreu um erro ao se comunicar com a servidor Ollama local. {ex.Message} ", tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
+            }
+
         }
 
     }

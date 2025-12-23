@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 using System.Diagnostics;
@@ -25,74 +26,88 @@ namespace Ollama.Api.Controllers
         [HttpGet("PerguntaEmGeral")]
         public async Task<IActionResult> PerguntaEmGeral([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
             try
             {
-                var tempo = Stopwatch.StartNew();
-
-                if (string.IsNullOrWhiteSpace(pergunta))
-                    return BadRequest(new { erro = "Assunto obrigatório." });
-
-     
                 if (string.IsNullOrWhiteSpace(pergunta))
                 {
-                    string mensagem = "Informe uma pergunta válida.";
-
-                    _helper.Erro($"{mensagem}");
-                    return BadRequest(new { erro = mensagem });
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Informe uma pergunta válida.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
                 }
 
                 var resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
 
                 tempo.Stop();
-                var objeto = new
-                {
-                    pergunta = pergunta,
-                    resposta,
-                    Tempo = $"{tempo.ElapsedMilliseconds} ms"
-                };
-
-                _helper.Informacao($"{objeto}");
-                return Ok(objeto);
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
             }
             catch (TimeoutException)
             {
-                return StatusCode(504, new { sucesso = false, mensagem = "Timeout ao chamar Ollama." });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Timeout ao chamar Ollama.", tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { sucesso = false, mensagem = ex.Message });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, ex.Message, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
         }
 
         [HttpPost("PerguntarComContexto")]
         public async Task<IActionResult> PerguntarComContexto([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
             try
             {
-                var tempo = Stopwatch.StartNew();
                 if (string.IsNullOrWhiteSpace(pergunta))
-                    return BadRequest(new { erro = "Assunto obrigatório." });
+                {
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Informe uma pergunta válida.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
+                }
 
                 string prompt = _contextoServico.ObterPromptComBaseDocumentos(pergunta, cancellationToken);
                 if (string.IsNullOrEmpty(prompt))
                 {
-                    return BadRequest(new { erro = "Sem resultado para o assunto informado!" });
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Sem resultado para o assunto informado!", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
                 }
 
-                var resp = await _OllamaServico.ProcessaPromptLocalContextoAsync(prompt, cancellationToken);
-                _helper.Informacao($"{resp}");
-                tempo.Stop();
+                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(prompt, cancellationToken);
 
-                return Ok(new { Sucesso = true, resp, Tempo = $"{tempo.ElapsedMilliseconds} ms" });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
             }
             catch (TimeoutException)
             {
-                return StatusCode(504, new { Sucesso = false, mensagem = "Timeout ao chamar Ollama.", Tempo = 0 });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Timeout ao chamar Ollama.", tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { sucesso = false, mensagem = ex.Message, Tempo = 0 });
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, ex.Message, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
         }
+
+
     }
 }

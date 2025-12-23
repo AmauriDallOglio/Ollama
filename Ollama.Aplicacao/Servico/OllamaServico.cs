@@ -36,7 +36,7 @@ namespace Ollama.Aplicacao.Servico
 
 
 
-        public Task<string> ProcessaPromptLocalAsync(string prompt, CancellationToken ct)
+        public Task<string> ProcessaPromptLocalAsync(string prompt, CancellationToken cancellationToken)
         {
             var body = new 
             { 
@@ -45,12 +45,12 @@ namespace Ollama.Aplicacao.Servico
                 stream = false 
             };
 
-            return EnviarPromptAsync(_OllamaAppSettingsDto_Local, body, ct);
+            return EnviarPromptAsync(_OllamaAppSettingsDto_Local, body, cancellationToken);
         }
 
-        public async Task<string> ProcessaPromptLocalContextoAsync(string promptCompleto, CancellationToken ct)
+        public async Task<string> ProcessaPromptLocalContextoAsync(string promptCompleto, CancellationToken cancellationToken)
         {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(_OllamaAppSettingsDto_Local.TempoLimite));
 
             var body = new
@@ -62,10 +62,10 @@ namespace Ollama.Aplicacao.Servico
                 temperature = 0.0
             };
 
-            return await EnviarPromptAsync(_OllamaAppSettingsDto_Local, body, cts.Token);
+            return await EnviarPromptAsync(_OllamaAppSettingsDto_Local, body, cancellationToken);
         }
 
-        public Task<string> ProcessaPromptDockerAsync(string prompt, CancellationToken ct)
+        public Task<string> ProcessaPromptDockerAsync(string prompt, CancellationToken cancellationToken)
         {
             var body = new 
             { 
@@ -74,7 +74,7 @@ namespace Ollama.Aplicacao.Servico
                 stream = true 
             };
 
-            return EnviarPromptAsync(_OllamaAppSettingsDto_Docker, body, ct, streaming: true);
+            return EnviarPromptAsync(_OllamaAppSettingsDto_Docker, body, cancellationToken, streaming: true);
         }
 
 

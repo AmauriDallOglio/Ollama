@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 using System.Diagnostics;
@@ -26,29 +27,30 @@ namespace Ollama.Api.Controllers
         [HttpGet("PerguntaDocker")]
         public async Task<IActionResult> PerguntaDocker([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
+            OllamaResponseDto ollamaResponseDto = new();
+            var tempo = Stopwatch.StartNew();
             try
             {
-                var tempo = Stopwatch.StartNew();
                 if (string.IsNullOrWhiteSpace(pergunta))
-                    return BadRequest(new { erro = "Informe uma pergunta válida." });
-
+                {
+                    tempo.Stop();
+                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Informe uma pergunta válida.", tempo.ElapsedMilliseconds);
+                    _helper.Informacao($"{ollamaResponseDto}");
+                    return BadRequest(ollamaResponseDto);
+                }
 
                 var resposta = await _OllamaServico.ProcessaPromptDockerAsync(pergunta, cancellationToken);
                 tempo.Stop();
-                var objeto = new
-                {
-                    pergunta = pergunta,
-                    resposta,
-                    Tempo = $"{tempo.ElapsedMilliseconds} ms"
-                };
-
-                _helper.Informacao($"{objeto}");
-                return Ok(objeto);
+                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return Ok(ollamaResponseDto);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                tempo.Stop();
+                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, ex.Message, tempo.ElapsedMilliseconds);
+                _helper.Informacao($"{ollamaResponseDto}");
+                return BadRequest(ollamaResponseDto);
             }
    
         }
