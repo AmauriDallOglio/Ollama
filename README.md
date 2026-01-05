@@ -1,4 +1,4 @@
-# Exemplo usado para integra API + Banco de Dados + LLM local (Ollama) para geração de respostas estruturadas em JSON.
+# Exemplo de API + Banco de Dados + LLM local (Ollama) para geração de respostas estruturadas em JSON.
 
 
 <img width="1150" height="591" alt="image" src="https://github.com/user-attachments/assets/e8201f90-f731-4b27-978d-5c10571a5828" />
