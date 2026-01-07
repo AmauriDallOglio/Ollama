@@ -237,13 +237,53 @@ Quando você clicar Run docker cria o container Ollama32, sobe o servidor Ollama
 
 <img width="1229" height="586" alt="image" src="https://github.com/user-attachments/assets/d66dcfb6-0618-4244-93d4-7cb5bf3ab12f" />
 
-
+Exemplo do conteiner configurado para rodar localmente em Docker para acesso via API.
 
 <img width="1242" height="409" alt="image" src="https://github.com/user-attachments/assets/ec8da482-2259-4e63-8161-32d68c8012e7" />
 
 
+## Testando o conteiner
+
+Estou executando e depurando um container Docker com a imagem ollama/ollama:latest, a aba "Debug" está aberta, permitindo que comandos sejam executados diretamente no terminal do container.
+* Container ID: 87714fba46bd
+* Comando executado: ollama list (lista modelo disponíveis no Ollama)
+
 <img width="1244" height="515" alt="image" src="https://github.com/user-attachments/assets/02a031f8-b589-43e8-8440-ca0916b065b3" />
 
+### PS C:\> docker ps 
+
+Inicia um container chamado ollama com a imagem ollama/ollama
+
+* CONTAINER ID   IMAGE                             COMMAND                  CREATED             STATUS             PORTS                                             NAMES 
+* c394d5a0b985   ollama/ollama:latest              "/bin/ollama serve"      10 minutes ago      Up 10 minutes      0.0.0.0:11434->11434/tcp, [::]:11434->11434/tcp   OllamaTeste 
+* 8d8ac8f2bd09   docker/welcome-to-docker:latest   "/docker-entrypoint.…"   About an hour ago   Up About an hour   0.0.0.0:8088->80/tcp, [::]:8088->80/tcp           welcome-to-docker 
+
+### PS C:\> docker exec -it c394d5a0b985 bash 
+
+Executa o modelo llama3.2 dentro do container, o terminal mostra o processo de download das camadas do modelo;
+
+* root@c394d5a0b985:/# ollama --version 
+* ollama version is 0.12.6 
+* root@c394d5a0b985:/# ollama list 
+* NAME             ID              SIZE      MODIFIED 
+* llama2:latest    78e26419b446    3.8 GB    2 minutes ago 
+
+### root@c394d5a0b985:/# ollama run llama2 
+>>> Quem é o batman? 
+Batman is...
+>>> bye 
+
+<img width="1604" height="484" alt="image" src="https://github.com/user-attachments/assets/54908c82-c377-4214-845a-b61bf59e16bb" />
+
+
+
+## Windows PowerShell 
+
+A imagem abaixo mostra o Docker Desktop e um terminal do Windows PowerShell, onde está sendo feita uma chamada para um modelo de linguagem via API local.
+
+ Terminal PowerShell: Está sendo feito um POST para http://localhost:11434/api/generate usando o comando Invoke-RestMethod. 
+ O corpo da requisição contém:
+ 
 Invoke-RestMethod -Uri "http://localhost:11434/api/generate" ` 
 
   -Method Post ` 
@@ -252,54 +292,29 @@ Invoke-RestMethod -Uri "http://localhost:11434/api/generate" `
 
   -ContentType "application/json" 
 
+Ele está em execução consumindo bastante CPU (mais de 780% de uso em um sistema com 16 núcleos disponíveis), além de 2.52 GB de memória.
+
 <img width="1424" height="583" alt="image" src="https://github.com/user-attachments/assets/3e17e2da-1076-4cbf-b100-1c4494549f06" />
 
-Windows PowerShell 
-
  
+
+Rodar um modelo de IA localmente para gerar respostas a perguntas, como uma alternativa ao uso de APIs externas ou serviços em nuvem.
 
 docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama 
+* docker run -d -v = Isso inicia um container com o Ollama;
+* ollama:/root/.ollama = Salva os dados do modelo localmente;
+* -p 11434:11434 = Expõe a API do Ollama na porta 11434 para que interagir via HTTP.
 
 docker exec -it ollama ollama run llama3.2 
+* docker exec ollama ollama run llama3.2 = Isso baixa e inicializa o modelo llama3.2 dentro do container.
+
+Por que isso é útil?
+* Roda o modelo localmente, sem enviar dados para servidores externos.
+* Não depende de serviços de requisição.
+* Mais rápido para testes o desenvolvimento local.
+
 
 <img width="1438" height="264" alt="image" src="https://github.com/user-attachments/assets/65bd7976-691e-4065-bd25-fc257cb61859" />
-
-
-
-<img width="1604" height="484" alt="image" src="https://github.com/user-attachments/assets/54908c82-c377-4214-845a-b61bf59e16bb" />
-
-PS C:\> docker ps 
-
-CONTAINER ID   IMAGE                             COMMAND                  CREATED             STATUS             PORTS                                             NAMES 
-
-c394d5a0b985   ollama/ollama:latest              "/bin/ollama serve"      10 minutes ago      Up 10 minutes      0.0.0.0:11434->11434/tcp, [::]:11434->11434/tcp   OllamaTeste 
-
-8d8ac8f2bd09   docker/welcome-to-docker:latest   "/docker-entrypoint.…"   About an hour ago   Up About an hour   0.0.0.0:8088->80/tcp, [::]:8088->80/tcp           welcome-to-docker 
-
-PS C:\> docker exec -it c394d5a0b985 bash 
-
-root@c394d5a0b985:/# ollama --version 
-
-ollama version is 0.12.6 
-
-root@c394d5a0b985:/# ollama list 
-
-NAME             ID              SIZE      MODIFIED 
-
-llama2:latest    78e26419b446    3.8 GB    2 minutes ago 
-
-root@c394d5a0b985:/# ollama run llama2 
-
->>> Quem é o batman? 
-
- 
-
- 
-
-bye 
-
-
-
 
 
   
