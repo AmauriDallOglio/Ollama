@@ -250,6 +250,9 @@ Estou executando e depurando um container Docker com a imagem ollama/ollama:late
 
 <img width="1244" height="515" alt="image" src="https://github.com/user-attachments/assets/02a031f8-b589-43e8-8440-ca0916b065b3" />
 
+
+## Windows PowerShell 
+
 ### PS C:\> docker ps 
 
 Inicia um container chamado ollama com a imagem ollama/ollama
@@ -276,8 +279,6 @@ Batman is...
 <img width="1604" height="484" alt="image" src="https://github.com/user-attachments/assets/54908c82-c377-4214-845a-b61bf59e16bb" />
 
 
-
-## Windows PowerShell 
 
 A imagem abaixo mostra o Docker Desktop e um terminal do Windows PowerShell, onde está sendo feita uma chamada para um modelo de linguagem via API local.
 
