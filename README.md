@@ -1,44 +1,42 @@
-# Exemplo de API + Banco de Dados + LLM local (Ollama) para geração de respostas estruturadas em JSON.
+# Arquitetura de uma aplicação que integra IA generativa com banco de dados SQL
+
+## Exemplo de API + Banco de Dados + LLM local (Ollama) para geração de respostas estruturadas em JSON.
 
 
-<img width="1150" height="591" alt="image" src="https://github.com/user-attachments/assets/e8201f90-f731-4b27-978d-5c10571a5828" />
+<img width="933" height="615" alt="image" src="https://github.com/user-attachments/assets/c6db6cea-8f80-4efc-b08f-6b378793e3e1" />
 
-### O processo é usado quando se integra API + Banco de Dados + LLM local (Ollama) para geração de respostas estruturadas em JSON.
+### 1 Usuário faz uma requisição para a API
 
-1 Usuário faz uma requisição para a API
-
-2 A API: Consulta o SQL Server + Monta um prompt com dados do banco;
+### 2 A API: Consulta o SQL Server + Monta um prompt com dados do banco;
 * Prompt é simplesmente o texto de entrada que você envia para um modelo de IA, no exemplo é a instrução + pergunta + dados que dizem à IA o que ela deve fazer.
 * O banco NÃO conversa direto com o Ollama
 * Quem orquestra tudo é a sua API
   
-3 O prompt generativo é enviado para o Ollama
+### 3 O prompt generativo é enviado para o Ollama
 * Um prompt generativo é um prompt estruturado, feito para gerar conteúdo alinhado ao negócio. Nos exemplos ele normalmente contém: Contexto, Instrução clara, Dados, Formato de saída esperado;
 * Ollama é uma plataforma local que permite rodar modelos de IA generativa (LLMs) no seu computador ou servidor, sem depender de cloud (OpenAI, Azure, etc) motor local que executa IA generativa.
 
-4 A IA Generativa processa o prompt
+### 4 A IA Generativa processa o prompt
 * IA Generativa é um tipo de Inteligência Artificial a tecnologia capaz de: Gerar texto, gerar código, gerar resumos, gerar explicações, gerar respostas baseadas em contexto
 
-5 A API recebe a resposta
+### 5 A API recebe a resposta
 * Orquestradora de dados + prompt + resposta
 
-6 A API retorna JSON estruturado para o serviço
+### 6 A API retorna JSON estruturado para o serviço
 
 
 
 
-### Executar modelos de IA localmente
+## Executar modelos de IA localmente
 
 Sem precisar enviar dados para a internet (ideal para privacidade e uso offline).
 
-### Integrar modelos a aplicações
-
 Ele expõe uma API HTTP local (por padrão em http://localhost:11434), que pode ser usada em qualquer linguagem (C#, Python, JavaScript etc.).
 
-### Gerar texto, código, resumos, traduções, chatbots, etc.
 Você pode usar os modelos como assistentes, geradores de código, ferramentas de análise de texto e muito mais.
 
-### Treinar e personalizar modelos
+## Treinar e personalizar modelos
+
 É possível criar modelos customizados (fine-tuned) com seus próprios dados usando o comando ollama create.
 
 **https://ollama.com/download/windows**
