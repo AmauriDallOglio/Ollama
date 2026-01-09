@@ -98,17 +98,10 @@ namespace Ollama.Api.Util
         public static void RegistrarServicos(WebApplicationBuilder builder)
         {
 
-            // Configurações do appsettings.json
-          //  builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("OllamaLocal"));
-
-            builder.Services.Configure<OllamaAppSettingsDto>(
-            "Local",
-            builder.Configuration.GetSection("OllamaLocal"));
-
-            builder.Services.Configure<OllamaAppSettingsDto>(
-            "Docker",
-            builder.Configuration.GetSection("OllamaDocker"));
-
+            //// Configurações do appsettings.json
+            //  builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("OllamaLocal"));
+            builder.Services.Configure<OllamaAppSettingsDto>("Local", builder.Configuration.GetSection("OllamaLocal"));
+            builder.Services.Configure<OllamaAppSettingsDto>("Docker", builder.Configuration.GetSection("OllamaDocker"));
 
             //Desabilitar totalmente o ModelState automático do .NET para permitir validação e tratamento manual
             builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -122,17 +115,10 @@ namespace Ollama.Api.Util
             // HttpClient para o OllamaServico
             builder.Services.AddHttpClient<OllamaServico>();
 
-
             // Registrar Contexto e OllamaServico
             builder.Services.AddSingleton<PromptDocumentoServico>(); // contexto em memória
  
- 
-
-
-            // Se tiver mais serviços da aplicação, registre aqui:
-            // builder.Services.AddScoped<OutroServico>();
         }
-
 
         // ================================================================
         // Abre um canal para registrar o ILogger na classe
@@ -155,8 +141,5 @@ namespace Ollama.Api.Util
         {
             _loggerDotNet = logger;
         }
-
- 
-
     }
 }

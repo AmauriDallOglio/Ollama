@@ -9,13 +9,6 @@ namespace Ollama.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            // ----------------------------------------------
-            // CRIAR LOGGER TEMPORÁRIO MANUAL
-            // (funciona ANTES do app.Build())
-            // ----------------------------------------------
-
-
-
 
             ILogger logPipelineBuilder = Configuracao.LogPipelineBuilder(builder);
  
@@ -47,9 +40,6 @@ namespace Ollama.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-
-
-
             var app = builder.Build();
 
             var helper = app.Services.GetRequiredService<HelperConsoleColor>();
@@ -63,6 +53,9 @@ namespace Ollama.Api
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
+
+            app.UseMiddleware<ErrorMiddleware>();
+
             app.Run();
         }
     }

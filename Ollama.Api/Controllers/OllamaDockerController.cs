@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Ollama.Api.Util;
 using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
@@ -11,12 +12,12 @@ namespace Ollama.Api.Controllers
     [Route("api/[controller]")]
     public class OllamaDockerController : ControllerBase
     {
-        private readonly ILogger<OllamaPromptController> _logger;
+        private readonly ILogger<OllamaDockerController> _logger;
         private readonly OllamaServico _OllamaServico;
         private readonly HelperConsoleColor _helper;
         private readonly PromptDocumentoServico _contextoServico;
 
-        public OllamaDockerController(OllamaServico ollamaServico, PromptDocumentoServico contextoServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
+        public OllamaDockerController(OllamaServico ollamaServico, PromptDocumentoServico contextoServico, ILogger<OllamaDockerController> logger, HelperConsoleColor helper)
         {
             _OllamaServico = ollamaServico;
             _logger = logger;
@@ -24,36 +25,91 @@ namespace Ollama.Api.Controllers
             _contextoServico = contextoServico;
         }
 
-        [HttpGet("PerguntaDocker")]
-        public async Task<IActionResult> PerguntaDocker([FromQuery] string pergunta, CancellationToken cancellationToken)
+        [HttpGet("PerguntaEmGeral")]
+        public IActionResult PerguntaEmGeral([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
-            OllamaResponseDto ollamaResponseDto = new();
             var tempo = Stopwatch.StartNew();
-            try
-            {
-                if (string.IsNullOrWhiteSpace(pergunta))
-                {
-                    tempo.Stop();
-                    ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, "Informe uma pergunta válida.", tempo.ElapsedMilliseconds);
-                    _helper.Informacao($"{ollamaResponseDto}");
-                    return BadRequest(ollamaResponseDto);
-                }
 
-                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(pergunta, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
-                tempo.Stop();
-                ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
-                _helper.Informacao($"{ollamaResponseDto}");
-                return Ok(ollamaResponseDto);
-            }
-            catch (Exception ex)
-            {
-                tempo.Stop();
-                ollamaResponseDto = new OllamaResponseDto().GeraErro(pergunta, ex.Message, tempo.ElapsedMilliseconds);
-                _helper.Informacao($"{ollamaResponseDto}");
-                return BadRequest(ollamaResponseDto);
-            }
-   
+            var erro = ResponseHelper.ValidarPergunta(this, _helper, pergunta, tempo);
+            if (erro != null)
+                return erro;
+
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(pergunta, OllamaServico.TipoServidor.ServidorDocker, cancellationToken);
+
+            return ResponseHelper.CriarResposta(this, _helper, pergunta, acao, tempo);
         }
+
+
+
+        [HttpGet("PerguntarComContexto")]
+        public IActionResult PerguntarComContexto([FromQuery] string pergunta, CancellationToken cancellationToken)
+        {
+            var tempo = Stopwatch.StartNew();
+
+            var erro = ResponseHelper.ValidarPergunta(this, _helper, pergunta, tempo);
+            if (erro != null)
+                return erro;
+
+            string prompt = _contextoServico.ObterPromptComBaseDocumentos(pergunta, cancellationToken);
+            erro = ResponseHelper.ValidarPergunta(this, _helper, prompt, tempo);
+            if (erro != null)
+                return erro;
+
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorDocker, cancellationToken);
+
+            return ResponseHelper.CriarResposta(this, _helper, pergunta, acao, tempo);
+        }
+
+
+
+        [HttpPost("EspecialistaOrdemServico")]
+        public async Task<IActionResult> EspecialistaOrdemServico([FromQuery] string manutentor, CancellationToken cancellationToken)
+        {
+            var tempo = Stopwatch.StartNew();
+
+            var erro = ResponseHelper.ValidarPergunta(this, _helper, manutentor, tempo);
+            if (erro != null)
+                return erro;
+
+            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServico(manutentor);
+            string prompt = promptDto.FormataToString();
+            erro = ResponseHelper.ValidarPergunta(this, _helper, prompt, tempo);
+            if (erro != null)
+                return erro;
+
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorDocker, cancellationToken);
+
+            _helper.Informacao($"{acao().GetAwaiter().GetResult()}");
+            return Ok(acao().GetAwaiter().GetResult());
+
+            //return ResponseHelper.CriarResposta(this, _helper, prompt, acao, tempo);
+        }
+
+
+        [HttpPost("EspecialistaOrdemServicoHtml")]
+        public async Task<IActionResult> EspecialistaOrdemServicoHtml([FromQuery] string manutentor, CancellationToken cancellationToken)
+        {
+            var tempo = Stopwatch.StartNew();
+
+            var erro = ResponseHelper.ValidarPergunta(this, _helper, manutentor, tempo);
+            if (erro != null)
+                return erro;
+
+            PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServicoHtml(manutentor);
+            string prompt = promptDto.FormataToString();
+            erro = ResponseHelper.ValidarPergunta(this, _helper, prompt, tempo);
+            if (erro != null)
+                return erro;
+
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorDocker, cancellationToken);
+
+            _helper.Informacao($"{acao().GetAwaiter().GetResult()}");
+            return Ok(acao().GetAwaiter().GetResult());
+
+            //return ResponseHelper.CriarResposta(this, _helper, prompt, acao, tempo);
+
+        }
+
 
     }
 }

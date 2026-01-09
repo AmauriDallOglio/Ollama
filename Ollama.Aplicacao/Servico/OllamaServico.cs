@@ -22,7 +22,7 @@ namespace Ollama.Aplicacao.Servico
             _logger = logger;
         }
 
-        public async Task<string> ProcessaPromptLocalContextoAsync(string promptCompleto, TipoServidor tipoServidor, CancellationToken cancellationToken)
+        public async Task<string> ProcessaPromptAsync(string promptCompleto, TipoServidor tipoServidor, CancellationToken cancellationToken)
         {
             var tipoServidorConfig = ObterServidorInfo(tipoServidor);
             if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
@@ -43,7 +43,7 @@ namespace Ollama.Aplicacao.Servico
                 {
                     temperature = temperatura,
                     top_p = topP,
-                    language = "pt-BR",
+                    language = tipoServidorConfig.Idioma,
                 }
             };
 
