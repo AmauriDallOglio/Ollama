@@ -10,21 +10,23 @@ namespace Ollama.Aplicacao.Servico
     public class OllamaServico
     {
         private readonly HttpClient _httpClient;
-        private readonly OllamaAppSettingsDto _OllamaAppSettingsDto_Local;
-        private readonly OllamaAppSettingsDto _OllamaAppSettingsDto_Docker;
+        private readonly AppSettingsDto _appSettings;
         private readonly ILogger<OllamaServico> _logger;
 
-        public OllamaServico(HttpClient httpClient, ILogger<OllamaServico> logger, IOptionsMonitor<OllamaAppSettingsDto> options)
+        public OllamaServico(HttpClient httpClient, ILogger<OllamaServico> logger, IOptionsMonitor<AppSettingsDto> options)
         {
             _httpClient = httpClient;
-            _OllamaAppSettingsDto_Local = options.Get("Local");
-            _OllamaAppSettingsDto_Docker = options.Get("Docker");
             _logger = logger;
+            _appSettings = options.CurrentValue;
         }
 
-        public async Task<string> ProcessaPromptAsync(string promptCompleto, TipoServidor tipoServidor, CancellationToken cancellationToken)
+        public async Task<string> ProcessaPromptAsync(string promptCompleto, CancellationToken cancellationToken)
         {
-            var tipoServidorConfig = ObterServidorInfo(tipoServidor);
+
+
+            int tipoServidor = _appSettings.TipoServidor.Tipo;
+            var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
+
             if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
             {
                 _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
@@ -50,15 +52,15 @@ namespace Ollama.Aplicacao.Servico
             try
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(tipoServidorConfig.TempoLimite));
+                cts.CancelAfter(TimeSpan.FromSeconds(tipoServidorConfig.TempoLimiteSegundos));
 
                 return await EnviarPromptAsync(tipoServidorConfig.UrlBase, body, cts.Token);
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 // Timeout atingido
-                _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimite, tipoServidor);
-                throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimite}s atingido para {tipoServidor}");
+                _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
+                throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
             }
             catch (TaskCanceledException ex)
             {
@@ -110,36 +112,18 @@ namespace Ollama.Aplicacao.Servico
         }
 
 
-        private OllamaAppSettingsDto ObterServidorInfo(TipoServidor tipoServidor)
+        private TipoServidorSelecionado ObterServidorInfo(TipoServidor tipoServidor)
         {
             switch (tipoServidor)
             {
                 case TipoServidor.ServidorLocal:
-                    return new OllamaAppSettingsDto
-                    {
-                        UrlBase = _OllamaAppSettingsDto_Local.UrlBase,
-                        Modelo = _OllamaAppSettingsDto_Local.Modelo,
-                        TempoLimite = _OllamaAppSettingsDto_Local.TempoLimite,
-                        Idioma = _OllamaAppSettingsDto_Local.Idioma
-                    };
+                    return new TipoServidorSelecionado().CarregarLocal(_appSettings);
 
                 case TipoServidor.ServidorDocker:
-                    return new OllamaAppSettingsDto
-                    {
-                        UrlBase = _OllamaAppSettingsDto_Docker.UrlBase,
-                        Modelo = _OllamaAppSettingsDto_Docker.Modelo,
-                        TempoLimite = _OllamaAppSettingsDto_Docker.TempoLimite,
-                        Idioma = _OllamaAppSettingsDto_Docker.Idioma
-                    };
+                    return new TipoServidorSelecionado().CarregarDocker(_appSettings);
 
                 default:
-                    return new OllamaAppSettingsDto
-                    {
-                        UrlBase = string.Empty,
-                        Modelo = string.Empty,
-                        TempoLimite = 0,
-                        Idioma = string.Empty
-                    };
+                    return new TipoServidorSelecionado();
             }
         }
 

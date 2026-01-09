@@ -34,7 +34,7 @@ namespace Ollama.Api.Controllers
             if (erro != null)
                 return erro;
 
-            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(pergunta, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(pergunta, cancellationToken);
 
             return ResponseHelper.CriarResposta(this, _helper, pergunta, acao, tempo);
         }
@@ -55,7 +55,7 @@ namespace Ollama.Api.Controllers
             if (erro != null)
                 return erro;
 
-            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, cancellationToken);
 
             return ResponseHelper.CriarResposta(this, _helper, pergunta, acao, tempo);
         }
@@ -77,7 +77,7 @@ namespace Ollama.Api.Controllers
             if (erro != null)
                 return erro;
 
-            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, cancellationToken);
 
             _helper.Informacao($"{acao().GetAwaiter().GetResult()}");
             return Ok(acao().GetAwaiter().GetResult());
@@ -101,7 +101,7 @@ namespace Ollama.Api.Controllers
             if (erro != null)
                 return erro;
 
-            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
+            Func<Task<string>> acao = () => _OllamaServico.ProcessaPromptAsync(prompt, cancellationToken);
 
             _helper.Informacao($"{acao().GetAwaiter().GetResult()}");
             return Ok(acao().GetAwaiter().GetResult());

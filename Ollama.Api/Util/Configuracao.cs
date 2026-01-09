@@ -99,9 +99,11 @@ namespace Ollama.Api.Util
         {
 
             //// Configurações do appsettings.json
-            //  builder.Services.Configure<OllamaAppSettingsDto>(builder.Configuration.GetSection("OllamaLocal"));
-            builder.Services.Configure<OllamaAppSettingsDto>("Local", builder.Configuration.GetSection("OllamaLocal"));
-            builder.Services.Configure<OllamaAppSettingsDto>("Docker", builder.Configuration.GetSection("OllamaDocker"));
+            builder.Services.Configure<AppSettingsDto>(builder.Configuration);
+
+            //builder.Services.Configure<AppSettingsDto>("TipoServidor", builder.Configuration.GetSection("TipoServidor"));
+            //builder.Services.Configure<AppSettingsDto>("Local", builder.Configuration.GetSection("OllamaLocal"));
+            //builder.Services.Configure<AppSettingsDto>("Docker", builder.Configuration.GetSection("OllamaDocker"));
 
             //Desabilitar totalmente o ModelState automático do .NET para permitir validação e tratamento manual
             builder.Services.Configure<ApiBehaviorOptions>(options =>
