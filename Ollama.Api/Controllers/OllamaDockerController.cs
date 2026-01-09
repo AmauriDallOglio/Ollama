@@ -39,7 +39,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(ollamaResponseDto);
                 }
 
-                var resposta = await _OllamaServico.ProcessaPromptDockerAsync(pergunta, cancellationToken);
+                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(pergunta, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
                 _helper.Informacao($"{ollamaResponseDto}");

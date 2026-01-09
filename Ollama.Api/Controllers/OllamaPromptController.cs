@@ -39,7 +39,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(ollamaResponseDto);
                 }
 
-                string resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
+                string resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(pergunta, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
 
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
@@ -76,7 +76,7 @@ namespace Ollama.Api.Controllers
                 PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServico(manutentor);
 
                 string texto = promptDto.FormataToString();
-                string resposta = await _OllamaServico.ProcessaPromptLocalAsync(texto, cancellationToken);
+                string resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
 
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(manutentor, resposta, tempo.ElapsedMilliseconds);
@@ -117,7 +117,7 @@ namespace Ollama.Api.Controllers
                 PromptResponseDto promptDto = new EngenhariaPromptServico().PromptOrdemServicoHtml(manutentor);
 
                 string texto = promptDto.FormataToString();
-                string resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, cancellationToken);
+                string resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(texto, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
 
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(manutentor, resposta, tempo.ElapsedMilliseconds);

@@ -8,14 +8,14 @@ namespace Ollama.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class OllamaContextoController : ControllerBase
+    public class OllamaLocalController : ControllerBase
     {
         private readonly ILogger<OllamaPromptController> _logger;
         private readonly OllamaServico _OllamaServico;
         private readonly HelperConsoleColor _helper;
         private readonly PromptDocumentoServico _contextoServico;
 
-        public OllamaContextoController(OllamaServico ollamaServico, PromptDocumentoServico contextoServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
+        public OllamaLocalController(OllamaServico ollamaServico, PromptDocumentoServico contextoServico, ILogger<OllamaPromptController> logger, HelperConsoleColor helper)
         {
             _OllamaServico = ollamaServico;
             _logger = logger;
@@ -38,7 +38,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(ollamaResponseDto);
                 }
 
-                var resposta = await _OllamaServico.ProcessaPromptLocalAsync(pergunta, cancellationToken);
+                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(pergunta, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
 
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
@@ -85,7 +85,7 @@ namespace Ollama.Api.Controllers
                     return BadRequest(ollamaResponseDto);
                 }
 
-                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(prompt, cancellationToken);
+                var resposta = await _OllamaServico.ProcessaPromptLocalContextoAsync(prompt, OllamaServico.TipoServidor.ServidorLocal, cancellationToken);
 
                 tempo.Stop();
                 ollamaResponseDto = new OllamaResponseDto().GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
