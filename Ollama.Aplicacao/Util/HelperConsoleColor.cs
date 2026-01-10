@@ -18,14 +18,15 @@ namespace Ollama.Aplicacao.Util
 
         public void Informacao(string mensagem)
         {
+            var mensagemTmp = $"---- {mensagem}";
             //Log.Information(mensagem);
-            _logger.LogInformation(mensagem);
-            Colorir(mensagem, ConsoleColor.Black, ConsoleColor.Green);
+            _logger.LogInformation(mensagemTmp);
+            Colorir(mensagemTmp, ConsoleColor.Black, ConsoleColor.Green);
         }
 
         public void Sucesso(string mensagem)
         {
-            var mensagemTmp = $"SUCESSO: {mensagem}";
+            var mensagemTmp = $"---- {mensagem}";
             //Log.Information(mensagemTmp);
             _logger.LogInformation(mensagemTmp);
             Colorir(mensagemTmp, ConsoleColor.Black, ConsoleColor.Cyan);
@@ -33,7 +34,7 @@ namespace Ollama.Aplicacao.Util
 
         public void Erro(string mensagem)
         {
-            var mensagemTmp = $"Erro: {mensagem}";
+            var mensagemTmp = $"---- {mensagem}";
             // Log.Error(mensagemTmp);
             _logger.LogError(mensagemTmp);
             Colorir(mensagemTmp, ConsoleColor.White, ConsoleColor.Red);
@@ -41,7 +42,7 @@ namespace Ollama.Aplicacao.Util
 
         public void Alerta(string mensagem)
         {
-            var mensagemTmp = $"Alerta: {mensagem}";
+            var mensagemTmp = $"---- {mensagem}";
             // Log.Warning(mensagemTmp);
             _logger.LogWarning(mensagemTmp);
             Colorir(mensagemTmp, ConsoleColor.Black, ConsoleColor.Yellow);
@@ -49,7 +50,7 @@ namespace Ollama.Aplicacao.Util
 
         public void Detalhado(string mensagem)
         {
-            var mensagemTmp = $"Detalhado: {mensagem}";
+            var mensagemTmp = $"---- {mensagem}";
             //Log.Debug(mensagemTmp);
             _logger.LogDebug(mensagemTmp);
             Colorir(mensagemTmp, ConsoleColor.DarkGray, ConsoleColor.Black);

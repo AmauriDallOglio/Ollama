@@ -111,15 +111,11 @@ namespace Ollama.Api.Util
                 options.SuppressModelStateInvalidFilter = true;
             });
 
-            // Serviço de logs coloridos
             builder.Services.AddTransient<HelperConsoleColor>();
-
-            // HttpClient para o OllamaServico
             builder.Services.AddHttpClient<OllamaServico>();
+            builder.Services.AddSingleton<EngenhariaPromptServico>();
+            builder.Services.AddSingleton<SessaoMemoria>();
 
-            // Registrar Contexto e OllamaServico
-            builder.Services.AddSingleton<PromptDocumentoServico>(); // contexto em memória
- 
         }
 
         // ================================================================

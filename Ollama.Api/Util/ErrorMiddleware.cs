@@ -26,10 +26,7 @@ namespace Ollama.Api.Util
                 tempo.Stop();
                 _logger.LogError(ex, "Timeout na requisição");
 
-                var response = new OllamaResponseDto().GeraErro(
-                    context.Request.Path,
-                    $"Timeout ao chamar Ollama. {ex.Message}",
-                    tempo.ElapsedMilliseconds);
+                var response = new ResultadoOperacaoDto().GeraErro( context.Request.Path, $"Timeout ao chamar Ollama. {ex.Message}",    tempo.ElapsedMilliseconds);
 
                 context.Response.StatusCode = StatusCodes.Status408RequestTimeout;
                 await context.Response.WriteAsJsonAsync(response);
@@ -39,10 +36,7 @@ namespace Ollama.Api.Util
                 tempo.Stop();
                 _logger.LogError(ex, "Erro inesperado");
 
-                var response = new OllamaResponseDto().GeraErro(
-                    context.Request.Path,
-                    ex.Message,
-                    tempo.ElapsedMilliseconds);
+                var response = new ResultadoOperacaoDto().GeraErro(  context.Request.Path, ex.Message, tempo.ElapsedMilliseconds);
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsJsonAsync(response);

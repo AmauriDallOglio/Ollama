@@ -1,66 +1,44 @@
 ﻿using Ollama.Aplicacao.Dto;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Ollama.Aplicacao.Servico
 {
     public class EngenhariaPromptServico
     {
         private static readonly Random _random = new Random();
-        public PromptResponseDto PromptManutencao(string Pergunta)
-        {
-            string persona = @"Você é um especialista em manutenção de máquinas industriais, construção civil, predial e veículos voltados ao mundo industrial, 
-                com amplo conhecimento em manutenção preventiva, preditiva e corretiva. 
-                Sua função é fornecer respostas técnicas, detalhadas e práticas, considerando boas práticas e normas de segurança, sempre explique de forma clara e estruturada. 
-                Se não souber a resposta, diga: Desculpe, não encontrei informações sobre isso na minha base de dados.";
+        private readonly List<DocumentoContextoDto> _documentos = [];
 
-            string contexto = @"
-                - Manutenção preventiva: inspeções periódicas, lubrificação, troca de filtros, calibragem.
-                - Manutenção preditiva: monitoramento por sensores (vibração, temperatura, pressão), análise de falhas, histórico de operação.
-                - Manutenção corretiva: reparos após falha, substituição de peças danificadas, diagnóstico de problemas.
-                - Normas de segurança: uso de EPIs, bloqueio de energia antes de manutenção, registro de manutenções.
-                - Observações específicas:
-                  * Tear: inspecionar lançadeiras, lubrificar partes móveis, verificar alinhamento dos quadros e revisar sistemas eletrônicos de controle.
-                  * Revisadeira: checar integridade dos rolos, motor e transmissão, ajustar tensões de enrolamento, inspecionar sensores de contagem e sistemas de segurança.
-                  * Injetora de plástico: verificar sistemas de aquecimento e refrigeração, calibrar pressão de injeção, inspecionar bicos e válvulas.
-                  * Fresadora CNC: calibrar eixos, lubrificar guias lineares, verificar fusos e motores de passo, atualizar software de controle.
-                  * Extrusora: inspecionar roscas, cilindros e resistências, monitorar temperatura, checar desgaste de matrizes.
-                  * Compressores: verificar pressão, drenagem de condensado, troca de óleo e filtros, monitorar temperatura de operação.
-                  * Esteiras transportadoras: checar alinhamento de correias, tensão dos rolos, lubrificação de mancais, inspeção de motores.
-                  * Caldeiras: inspecionar válvulas de segurança, controlar pressão e temperatura, realizar testes de estanqueidade, limpar tubulações de combustão.
-         
-                ";
-            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, Pergunta);
+        public EngenhariaPromptServico()
+        {
+            // Exemplo: inicializa alguns documentos. Em produção carregue de BD/arquivo.
+            _documentos.Add(new DocumentoContextoDto("1", "Batman", "É um super-herói da DC conhecido como o Cavaleiro das Trevas, que protege Gotham City."));
+            _documentos.Add(new DocumentoContextoDto("2", "Superman", "É um super-herói da DC vindo de Krypton, com poderes como superforça, visão de calor e voo."));
+            _documentos.Add(new DocumentoContextoDto("3", "Mulher-Maravilha", "É uma amazona guerreira da DC, com força sobre-humana e o Laço da Verdade."));
+            _documentos.Add(new DocumentoContextoDto("4", "Flash", "É o velocista escarlate da DC, capaz de correr em velocidades incríveis e manipular o tempo."));
+            _documentos.Add(new DocumentoContextoDto("5", "Aquaman", "É o rei de Atlântida na DC, com poderes de controlar o mar e se comunicar com criaturas marinhas."));
+        }
+
+        public PromptResponseDto PromptSessao(string pergunta, string sessaoMemoria)
+        {
+            string persona = @$"
+                Você é um especialista no assunto enviado.
+                - Se não souber a resposta, diga exatamente: Desculpe, não encontrei informações sobre isso na minha base de dados.'
+            ";
+
+            string contexto = @$"
+                - Inicialize a resposta contextualizando o assunto da sessão.
+                - Utilize o conteúdo da sessão como base principal para responder.
+                - Se a pergunta não tiver relação com o assunto da sessão, informe que não há dados disponíveis.
+                - Evite respostas muito longas, seja direto e preciso.
+            ";
+
+            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, sessaoMemoria + $"\n\nPergunta: {pergunta}");
             return promptDto;
         }
 
-        public PromptResponseDto PromptRevisaoTexto(string textoOriginal)
+        public string PromptOrdemServico(string manutentor)
         {
-            string persona = @"Você é um especialista em revisão e estruturação de textos acadêmicos, técnicos e literários. 
-                Sua função é organizar e formatar textos de forma clara, lógica e padronizada, sem alterar o conteúdo original. 
-                Sempre que estruturar o texto, utilize capítulos e seções, aplicando títulos coerentes e organizados. 
-                Nunca modifique as ideias, apenas estruture e formate.";
-
-            string contexto = @"
-                - Não reescreva ou altere o conteúdo do texto fornecido.
-                - Mantenha todas as ideias originais do autor.
-                - Divida o texto em capítulos e subcapítulos coerentes.
-                - Gere a saída de uma só vez, já formatada em estrutura de capítulos.
-                - Use um formato estruturado, como:
-                    Capítulo 1 - Introdução
-                    Capítulo 2 - Desenvolvimento
-                    2.1 Subtópico A
-                    2.2 Subtópico B
-                    Capítulo 3 - Conclusão
-                - Saída final sempre em **texto organizado e numerado**, sem comentários extras.";
-
-            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, textoOriginal);
-            return promptDto;
-        }
-
-        public PromptResponseDto PromptOrdemServico(string manutentor)
-        {
-  
-
             string persona = @$"
                 Você é um especialista em PCM (Planejamento e Controle da Manutenção) e organizador do trabalho dos manutentores. 
                 Sua função é analisar a lista de Ordens de Serviço recebida, avaliar os prazos e status, e organizar as atividades como se fosse o chefe da manutenção orientando o manutentor {manutentor}. 
@@ -87,10 +65,13 @@ namespace Ollama.Aplicacao.Servico
             var prompt = ConverterParaTexto(listaOrdensServico);
 
             PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
-            return promptDto;
+
+            string resultado = promptDto.FormataToString();
+
+            return resultado;
         }
 
-        public PromptResponseDto PromptOrdemServicoHtml(string manutentor)
+        public string PromptOrdemServicoHtml(string manutentor)
         {
             string persona = @$"
                 Você é um especialista em PCM (Planejamento e Controle da Manutenção) e organizador do trabalho dos manutentores. 
@@ -98,11 +79,13 @@ namespace Ollama.Aplicacao.Servico
                 Sempre fale de forma objetiva e clara, simulando uma comunicação prática de rotina como um técnico de manutenção.
             ";
 
+            string dataatual = ObterDataHoraBrasil();
+
             string contexto = @$"
-                - Inicialize falando: Olá {manutentor} bom dia, seu cronograma de trabalho para hoje: .
+                - Inicialize falando: Olá {manutentor}, bom dia! Seu cronograma de trabalho para hoje: .
                 - Analise a lista de Ordens de Serviço recebida em texto, destinada para o manutentor {manutentor} .
-                - Manutentor {manutentor} tem disponibilidade total de trabalho de 8h por dia, iniciando seu turno as 05:00 até as 13:30, parando das 09:00 até as 09:30 para descanso.
-                - Calculando meu inicio de trabalho na hora de execução desse prompt.
+                - Manutentor {manutentor} tem disponibilidade total de trabalho de 8h por dia, iniciando seu turno as 08:00 até as 18:00, parando das 12:00 até as 13:30 para descanso.
+                - Calculando meu inicio de trabalho as {dataatual}.
                 - Priorize as ordens com status 'Parada', 'EmExecucao', 'Agendada'. 
                 - Gere também uma estimativa do que o manutentor deve priorizar hoje, como se fosse uma orientação direta do chefe da manutenção.
                 - Finalize com um resumo prático: 'Bom trabalho!'.
@@ -113,12 +96,21 @@ namespace Ollama.Aplicacao.Servico
             var prompt = ConverterParaTexto(listaOrdensServico);
 
             PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
-            return promptDto;
+            string resultado = promptDto.FormataToString();
+
+            return resultado;
         }
 
-         
 
- 
+
+        public static string ObterDataHoraBrasil()
+        {
+            return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+        }
+
+
+
+
 
         public List<OrdemServicoDto> GerarListaOrdensServico(string nomeManutentor)
         {
@@ -129,19 +121,19 @@ namespace Ollama.Aplicacao.Servico
             // 10 passadas
             for (int i = 1; i <= 8; i++)
             {
-                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(-i), nomeManutentor, "Manutentor 2"));
+                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(-i), nomeManutentor, "Maximus Decimus Meridius"));
             }
 
             // 5 no dia atual
             for (int i = 0; i < 12; i++)
             {
-                ordens.Add(CriarOrdem(codigo++, hoje, nomeManutentor, "Manutentor 2"));
+                ordens.Add(CriarOrdem(codigo++, hoje, nomeManutentor, "Maximus Decimus Meridius"));
             }
 
             // 15 futuras
             for (int i = 1; i <= 15; i++)
             {
-                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(i), nomeManutentor, "Manutentor 2"));
+                ordens.Add(CriarOrdem(codigo++, hoje.AddDays(i), nomeManutentor, "Maximus Decimus Meridius"));
             }
 
             return ordens;
@@ -178,8 +170,87 @@ namespace Ollama.Aplicacao.Servico
             return sb.ToString();
         }
 
- 
 
+
+
+        public string ObterPromptComBaseDocumentos(string assunto, CancellationToken cancellationToken)
+        {
+            // Recupera os trechos de contexto
+            var docs = ObterDocumentos(assunto).ToList();
+            if (docs is null || docs.Count == 0)
+            {
+                return string.Empty;
+            }
+            // Monta o prompt com instruções + contexto relevante
+            var sb = new StringBuilder();
+            sb.AppendLine("Você é um assistente especializado. Use estritamente o contexto abaixo para responder.");
+            sb.AppendLine();
+            sb.AppendLine("--- CONTEXTO RELEVANTE ---");
+            int i = 1;
+            foreach (var d in docs)
+            {
+                sb.AppendLine($"[{i}] {d.Titulo}: {d.Texto}");
+                sb.AppendLine();
+                i++;
+            }
+            sb.AppendLine("--- FIM DO CONTEXTO ---");
+            sb.AppendLine();
+            sb.AppendLine("Pergunta:");
+            sb.AppendLine(assunto);
+            sb.AppendLine();
+            sb.AppendLine("Instrução: Seja objetivo, indique a fonte [n] quando usar um dos trechos acima. Se não houver informação suficiente, admita que não sabe.");
+
+            string promptCompleto = sb.ToString();
+            return promptCompleto;
+        }
+
+        // Busca simples por similaridade: pontua documentos pela frequência de termos (TF simples)
+        private IEnumerable<DocumentoContextoDto> ObterDocumentos(string prompt)
+        {
+            if (string.IsNullOrWhiteSpace(prompt))
+                return Enumerable.Empty<DocumentoContextoDto>();
+
+            // Quebra o prompt em tokens
+            List<string> promptTokens = Tokenizar(prompt);
+
+            // Calcula o score de cada documento
+            var documentosComScore = _documentos.
+                Select(doc => new
+                {
+                    Documento = doc,
+                    Score = CalcularScore(doc, promptTokens)
+                });
+
+            //Filtra apenas os assuntos relevantes
+            var assuntosEncontrados = documentosComScore.Where(x => x.Score > 0).OrderByDescending(x => x.Score).Select(x => x.Documento);
+
+            return assuntosEncontrados;
+        }
+
+        private int CalcularScore(DocumentoContextoDto doc, IEnumerable<string> promptTokens)
+        {
+            var tokensDocumento = Tokenizar($"{doc.Titulo} {doc.Texto}");
+
+            // Conta quantas vezes cada termo aparece nos tokens
+            int score = 0;
+            foreach (var token in promptTokens)
+            {
+                int achou = tokensDocumento.Count(tokenDocumento => tokenDocumento == token);
+                score += achou;
+            }
+
+            return score;
+        }
+
+
+        private static List<string> Tokenizar(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return new();
+            texto = texto.ToLowerInvariant();
+            // remove pontuação e divide por espaço
+            var words = Regex.Split(texto, @"\W+").Where(w => w.Length > 0).ToList();
+            return words;
+        }
 
 
 
