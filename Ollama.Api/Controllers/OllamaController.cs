@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Ollama.Api.Util;
-using Ollama.Aplicacao.Dto;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
 using System.Diagnostics;
@@ -71,7 +70,6 @@ namespace Ollama.Api.Controllers
                 return erro;
 
             string prompt = _EngenhariaPromptServico.PromptOrdemServico(manutentor);
-           // string prompt = promptDto.FormataToString();
             erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, prompt, tempo);
             if (erro != null)
                 return erro;
@@ -91,7 +89,6 @@ namespace Ollama.Api.Controllers
                 return erro;
 
             string prompt = _EngenhariaPromptServico.PromptOrdemServicoHtml(manutentor);
-            // string prompt = promptDto.FormataToString();
             erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, prompt, tempo);
             if (erro != null)
                 return erro;

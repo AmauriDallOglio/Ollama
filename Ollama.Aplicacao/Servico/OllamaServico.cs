@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ollama.Aplicacao.Dto;
 using System.Text;
@@ -127,14 +126,11 @@ namespace Ollama.Aplicacao.Servico
             }
         }
 
-
-
         public enum TipoServidor
         {
             ServidorLocal = 0,
             ServidorDocker = 1
         }
-
 
         public enum EstiloResposta
         {
@@ -142,7 +138,6 @@ namespace Ollama.Aplicacao.Servico
             Flexivel = 1, //Bom para quando você quer respostas variadas, mas ainda com certo controle, como brainstorming moderado ou textos explicativos.
             Criativo = 2 //Ideal para tarefas criativas, como histórias, metáforas, ideias fora da caixa ou geração de conteúdo artístico.
         }
-
 
         /// <summary>
         /// Temperatura baixa (0.1, 0.8) O modelo gera respostas mais determinísticas, objetivas e previsíveis.

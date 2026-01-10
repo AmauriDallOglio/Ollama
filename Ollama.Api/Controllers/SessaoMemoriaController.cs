@@ -62,8 +62,8 @@ namespace Ollama.Api.Controllers
             if (texto == null)
                 return NotFound("Sessão não encontrada.");
 
-            PromptResponseDto promptDto = _EngenhariaPromptServico.PromptSessao(pergunta, texto);
-            string prompt = promptDto.FormataToString();
+            string prompt = _EngenhariaPromptServico.PromptSessao(pergunta, texto);
+            //string prompt = promptDto.FormataToString();
             var erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, prompt, tempo);
             if (erro != null)
                 return erro;

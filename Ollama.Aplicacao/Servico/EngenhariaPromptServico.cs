@@ -19,7 +19,7 @@ namespace Ollama.Aplicacao.Servico
             _documentos.Add(new DocumentoContextoDto("5", "Aquaman", "É o rei de Atlântida na DC, com poderes de controlar o mar e se comunicar com criaturas marinhas."));
         }
 
-        public PromptResponseDto PromptSessao(string pergunta, string sessaoMemoria)
+        public string PromptSessao(string pergunta, string sessaoMemoria)
         {
             string persona = @$"
                 Você é um especialista no assunto enviado.
@@ -33,9 +33,9 @@ namespace Ollama.Aplicacao.Servico
                 - Evite respostas muito longas, seja direto e preciso.
             ";
 
-            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, sessaoMemoria + $"\n\nPergunta: {pergunta}");
-            return promptDto;
+            return MontarPrompt(persona, contexto, sessaoMemoria + $"\n\nPergunta: {pergunta}");
         }
+
 
         public string PromptOrdemServico(string manutentor)
         {
@@ -61,14 +61,8 @@ namespace Ollama.Aplicacao.Servico
                 - Apresente a lista completa das ordens de serviço recebida, organizada por data de cadastro, do mais antigo para o mais recente.
             ";
 
-            List<OrdemServicoDto>? listaOrdensServico = GerarListaOrdensServico(manutentor);
-            var prompt = ConverterParaTexto(listaOrdensServico);
-
-            PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
-
-            string resultado = promptDto.FormataToString();
-
-            return resultado;
+            string ordensServico = ObterListaOrdemServico(manutentor);
+            return MontarPrompt(persona, contexto, ordensServico);
         }
 
         public string PromptOrdemServicoHtml(string manutentor)
@@ -79,7 +73,7 @@ namespace Ollama.Aplicacao.Servico
                 Sempre fale de forma objetiva e clara, simulando uma comunicação prática de rotina como um técnico de manutenção.
             ";
 
-            string dataatual = ObterDataHoraBrasil();
+            string dataatual = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
 
             string contexto = @$"
                 - Inicialize falando: Olá {manutentor}, bom dia! Seu cronograma de trabalho para hoje: .
@@ -92,24 +86,38 @@ namespace Ollama.Aplicacao.Servico
                 - Gere a resposta em html e css para ser apresentada em um navegador.
             ";
 
+            string ordensServico = ObterListaOrdemServico(manutentor);
+            return MontarPrompt(persona, contexto, ordensServico);
+        }
+
+        private string ObterListaOrdemServico( string manutentor)
+        {
             List<OrdemServicoDto>? listaOrdensServico = GerarListaOrdensServico(manutentor);
-            var prompt = ConverterParaTexto(listaOrdensServico);
+            string ordens = OrdemServicoConverterParaTexto(listaOrdensServico);
+            return ordens;
+        }
+
+        private string MontarPrompt(string persona, string contexto, string prompt)
+        {
 
             PromptResponseDto promptDto = new PromptResponseDto(persona, contexto, prompt);
-            string resultado = promptDto.FormataToString();
+            string promptFormatado =  string.Join("\n", promptDto.Mensagens.Select(m => $"{m.Papel.ToUpper()}: {m.Conteudo}"));
 
-            return resultado;
+            return promptFormatado;
         }
 
-
-
-        public static string ObterDataHoraBrasil()
+        public string OrdemServicoConverterParaTexto(List<OrdemServicoDto> ordens)
         {
-            return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Lista de Ordens de Serviço:");
+            foreach (var os in ordens)
+            {
+                sb.AppendLine($"- Código: {os.Codigo}, Data: {os.DataCadastro:dd/MM/yyyy}, " +
+                              $"Status: {os.Status}, Tempo Estimado: {os.TempoEstimadoHoras}h, " +
+                              $"Manutentor: {os.Manutentor}");
+            }
+            return sb.ToString();
         }
-
-
-
 
 
         public List<OrdemServicoDto> GerarListaOrdensServico(string nomeManutentor)
@@ -155,19 +163,6 @@ namespace Ollama.Aplicacao.Servico
         {
             var valores = Enum.GetValues(typeof(StatusOrdemServico));
             return (StatusOrdemServico)valores.GetValue(_random.Next(valores.Length))!;
-        }
-
-        public string ConverterParaTexto(List<OrdemServicoDto> ordens)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("Lista de Ordens de Serviço:");
-            foreach (var os in ordens)
-            {
-                sb.AppendLine($"- Código: {os.Codigo}, Data: {os.DataCadastro:dd/MM/yyyy}, " +
-                              $"Status: {os.Status}, Tempo Estimado: {os.TempoEstimadoHoras}h, " +
-                              $"Manutentor: {os.Manutentor}");
-            }
-            return sb.ToString();
         }
 
 
