@@ -106,7 +106,7 @@ namespace Ollama.Aplicacao.Servico
             return promptFormatado;
         }
 
-        public string OrdemServicoConverterParaTexto(List<OrdemServicoDto> ordens)
+        private string OrdemServicoConverterParaTexto(List<OrdemServicoDto> ordens)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Lista de Ordens de Serviço:");
@@ -120,7 +120,7 @@ namespace Ollama.Aplicacao.Servico
         }
 
 
-        public List<OrdemServicoDto> GerarListaOrdensServico(string nomeManutentor)
+        private List<OrdemServicoDto> GerarListaOrdensServico(string nomeManutentor)
         {
             var ordens = new List<OrdemServicoDto>();
             DateTime hoje = DateTime.Now;
@@ -237,7 +237,6 @@ namespace Ollama.Aplicacao.Servico
             return score;
         }
 
-
         private static List<string> Tokenizar(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return new();
@@ -246,8 +245,5 @@ namespace Ollama.Aplicacao.Servico
             var words = Regex.Split(texto, @"\W+").Where(w => w.Length > 0).ToList();
             return words;
         }
-
-
-
     }
 }

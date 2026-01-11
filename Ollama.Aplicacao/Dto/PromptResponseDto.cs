@@ -13,11 +13,6 @@
                 new MensagemDto("user",  $"Pergunta: {pergunta}")
             };
         }
-
-        public string FormataToString()
-        {
-            return string.Join("\n", Mensagens.Select(m => $"{m.Papel.ToUpper()}: {m.Conteudo}"));
-        }
     }
 
 
@@ -31,7 +26,5 @@
             Papel = papel;
             Conteudo = conteudo;
         }
-
-
     }
 }
