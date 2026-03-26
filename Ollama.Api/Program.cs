@@ -40,6 +40,17 @@ namespace Ollama.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // Adiciona CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+
             var app = builder.Build();
 
             var helper = app.Services.GetRequiredService<HelperConsoleColor>();
@@ -51,6 +62,7 @@ namespace Ollama.Api
                 app.UseSwaggerUI();
             }
             app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
             app.UseAuthorization();
             app.MapControllers();
 

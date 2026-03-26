@@ -25,24 +25,24 @@ namespace Ollama.Api.Controllers
         }
 
 
-        [HttpGet("PerguntaEmGeral")]
-        public async Task<IActionResult?> PerguntaEmGeral([FromQuery] string prompt, CancellationToken cancellationToken)
+        [HttpGet("Prompt")]
+        public async Task<IActionResult?> Prompt([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
             var tempo = Stopwatch.StartNew();
 
-            var erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, prompt, tempo);
+            IActionResult? erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, pergunta, tempo);
             if (erro != null)
                 return erro;
 
-            var resultado = await ResponseHelper.ProcessaPrompt(_OllamaServico, prompt, this, _HelperConsoleColor, tempo, cancellationToken);
+            IActionResult? resultado = await ResponseHelper.ProcessaPrompt(_OllamaServico, pergunta, this, _HelperConsoleColor, tempo, cancellationToken);
             return resultado;
 
         }
 
 
 
-        [HttpGet("ObterPorAssunto")]
-        public async Task<IActionResult?> ObterPorTexto([FromQuery] string pergunta, CancellationToken cancellationToken)
+        [HttpGet("PromptGenerativo")]
+        public async Task<IActionResult?> PromptGenerativo([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
             var tempo = Stopwatch.StartNew();
 
@@ -60,16 +60,16 @@ namespace Ollama.Api.Controllers
         }
 
 
-        [HttpPost("ObterProOrdemServico")]
-        public async Task<IActionResult?> ObterProOrdemServico([FromQuery] string manutentor, CancellationToken cancellationToken)
+        [HttpGet("PromptGenerativoDados")]
+        public async Task<IActionResult?> PromptGenerativoDados([FromQuery] string pergunta, CancellationToken cancellationToken)
         {
             var tempo = Stopwatch.StartNew();
 
-            var erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, manutentor, tempo);
+            var erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, pergunta, tempo);
             if (erro != null)
                 return erro;
 
-            string prompt = _EngenhariaPromptServico.PromptOrdemServico(manutentor);
+            string prompt = _EngenhariaPromptServico.PromptOrdemServico(pergunta);
             erro = ResponseHelper.ValidarPergunta(this, _HelperConsoleColor, prompt, tempo);
             if (erro != null)
                 return erro;
