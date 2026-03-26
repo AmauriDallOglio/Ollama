@@ -13,11 +13,10 @@
 * Quem orquestra tudo é a sua API
   
 ### 3 O prompt generativo é enviado para o Ollama
-* Um prompt generativo é um prompt estruturado, feito para gerar conteúdo alinhado ao negócio. Nos exemplos ele normalmente contém: Contexto, Instrução clara, Dados, Formato de saída esperado;
-* Ollama é uma plataforma local que permite rodar modelos de IA generativa (LLMs) no seu computador ou servidor, sem depender de cloud (OpenAI, Azure, etc) motor local que executa IA generativa.
+* Um prompt generativo é um prompt estruturado, feito para gerar conteúdo alinhado ao negócio.
 
 ### 4 A IA Generativa processa o prompt
-* IA Generativa é um tipo de Inteligência Artificial a tecnologia capaz de: Gerar texto, gerar código, gerar resumos, gerar explicações, gerar respostas baseadas em contexto
+* IA Generativa é a tecnologia capaz de: Gerar texto, gerar código, gerar resumos, gerar explicações, gerar respostas baseadas em contexto
 
 ### 5 A API recebe a resposta
 * Orquestradora de dados + prompt + resposta
