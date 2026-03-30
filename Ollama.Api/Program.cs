@@ -53,15 +53,26 @@ namespace Ollama.Api
 
             var app = builder.Build();
 
+            // redireciona "/" para o Swagger
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/")
+                {
+                    context.Response.Redirect("/swagger/index.html");
+                    return;
+                }
+                await next();
+            });
+
+
             var helper = app.Services.GetRequiredService<HelperConsoleColor>();
             helper.Informacao("Aplicação iniciando...");
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            app.UseHttpsRedirection();
+   
+            app.UseSwagger();
+            app.UseSwaggerUI();
+
+            // app.UseHttpsRedirection(); //HTTPS
             app.UseCors("AllowAll");
             app.UseAuthorization();
             app.MapControllers();
