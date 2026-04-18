@@ -8,7 +8,7 @@ namespace Ollama.Api.Util
     public static class Configuracao
     {
         private static ILogger? _loggerDotNet;
-        private static ILogger? _loggerTemp;
+ 
 
         // ================================================================
         //  CONFIGURAÇÃO DO LOG NATIVO .NET
@@ -74,18 +74,18 @@ namespace Ollama.Api.Util
         // ================================================================
         public static ILogger LogPipelineBuilder(WebApplicationBuilder builder)
         {
-            ILogger _loggerTemp = LoggerFactory.Create(logging =>
+            _loggerDotNet = LoggerFactory.Create(logging =>
             {
                 logging.AddConsole();
                 logging.AddDebug();
             }).CreateLogger("LogPipelineBuilder");
 
-            _loggerTemp.LogWarning(" ***** Amauri Versão 1.0 ***** ");
-            _loggerTemp.LogInformation(" Logging nativo configurado para o builder.");
-            _loggerTemp.LogWarning(" Pipeline do builder iniciado.");
-            _loggerTemp.LogInformation(" Azure Log Diagnostics configurado.");
+            _loggerDotNet.LogWarning(" ***** Amauri Versão 1.0 ***** ");
+            _loggerDotNet.LogInformation(" Logging nativo configurado para o builder.");
+            _loggerDotNet.LogWarning(" Pipeline do builder iniciado.");
+            _loggerDotNet.LogInformation(" Azure Log Diagnostics configurado.");
 
-            return _loggerTemp;
+            return _loggerDotNet;
         }
 
 
@@ -95,8 +95,12 @@ namespace Ollama.Api.Util
         // ================================================================
         //  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
         // ================================================================
+
         public static void RegistrarServicos(WebApplicationBuilder builder)
         {
+            // Serviços para RAG e aprendizado de máquina
+            builder.Services.AddSingleton<SessaoMemoriaServico>();
+
 
             //// Configurações do appsettings.json
             builder.Services.Configure<AppSettingsDto>(builder.Configuration);
@@ -113,8 +117,25 @@ namespace Ollama.Api.Util
 
             builder.Services.AddTransient<HelperConsoleColor>();
             builder.Services.AddHttpClient<OllamaServico>();
-            builder.Services.AddSingleton<EngenhariaPromptServico>();
-            builder.Services.AddSingleton<SessaoMemoria>();
+            builder.Services.AddSingleton<EngenhariaPromptDocumentos>(sp =>
+            {
+                var docs = new List<DocumentoContextoDto>
+                {
+                    new DocumentoContextoDto("1", "Batman", "É um super-herói da DC conhecido como o Cavaleiro das Trevas, que protege Gotham City."),
+                    new DocumentoContextoDto("2", "Superman", "É um super-herói da DC vindo de Krypton, com poderes como superforça, visão de calor e voo."),
+                    new DocumentoContextoDto("3", "Mulher-Maravilha", "É uma amazona guerreira da DC, com força sobre-humana e o Laço da Verdade."),
+                    new DocumentoContextoDto("4", "Flash", "É o velocista escarlate da DC, capaz de correr em velocidades incríveis e manipular o tempo."),
+                    new DocumentoContextoDto("5", "Aquaman", "É o rei de Atlântida na DC, com poderes de controlar o mar e se comunicar com criaturas marinhas."),
+                };
+
+                return new EngenhariaPromptDocumentos(docs );
+            });
+            builder.Services.AddSingleton<SessaoMemoriaDto>();
+            builder.Services.AddSingleton<EngenhariaPromptBase>();
+            builder.Services.AddSingleton<EngenhariaPromptDadosMocados>();
+
+ 
+
 
         }
 
@@ -129,8 +150,8 @@ namespace Ollama.Api.Util
             RegistrarLogger(logger);
 
             _loggerDotNet?.LogInformation("-------------------------------------");
- 
-            _loggerTemp?.LogInformation(" Migrando do logger temporário para o logger final.");
+
+            _loggerDotNet?.LogInformation(" Migrando do logger temporário para o logger final.");
             _loggerDotNet?.LogInformation("-------------------------------------");
 
         }

@@ -1,40 +1,13 @@
 ﻿using Ollama.Aplicacao.Dto;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Ollama.Aplicacao.Servico
 {
-    public class EngenhariaPromptServico
+    public class EngenhariaPromptDadosMocados
     {
         private static readonly Random _random = new Random();
-        private readonly List<DocumentoContextoDto> _documentos = [];
 
-        public EngenhariaPromptServico()
-        {
-            // Exemplo: inicializa alguns documentos. Em produção carregue de BD/arquivo.
-            _documentos.Add(new DocumentoContextoDto("1", "Batman", "É um super-herói da DC conhecido como o Cavaleiro das Trevas, que protege Gotham City."));
-            _documentos.Add(new DocumentoContextoDto("2", "Superman", "É um super-herói da DC vindo de Krypton, com poderes como superforça, visão de calor e voo."));
-            _documentos.Add(new DocumentoContextoDto("3", "Mulher-Maravilha", "É uma amazona guerreira da DC, com força sobre-humana e o Laço da Verdade."));
-            _documentos.Add(new DocumentoContextoDto("4", "Flash", "É o velocista escarlate da DC, capaz de correr em velocidades incríveis e manipular o tempo."));
-            _documentos.Add(new DocumentoContextoDto("5", "Aquaman", "É o rei de Atlântida na DC, com poderes de controlar o mar e se comunicar com criaturas marinhas."));
-        }
 
-        public string PromptSessao(string pergunta, string sessaoMemoria)
-        {
-            string persona = @$"
-                Você é um especialista no assunto enviado.
-                - Se não souber a resposta, diga exatamente: Desculpe, não encontrei informações sobre isso na minha base de dados.'
-            ";
-
-            string contexto = @$"
-                - Inicialize a resposta contextualizando o assunto da sessão.
-                - Utilize o conteúdo da sessão como base principal para responder.
-                - Se a pergunta não tiver relação com o assunto da sessão, informe que não há dados disponíveis.
-                - Evite respostas muito longas, seja direto e preciso.
-            ";
-
-            return MontarPrompt(persona, contexto, sessaoMemoria + $"\n\nPergunta: {pergunta}");
-        }
 
 
         public string PromptOrdemServico(string manutentor)
@@ -90,7 +63,7 @@ namespace Ollama.Aplicacao.Servico
             return MontarPrompt(persona, contexto, ordensServico);
         }
 
-        private string ObterListaOrdemServico( string manutentor)
+        private string ObterListaOrdemServico(string manutentor)
         {
             List<OrdemServicoDto>? listaOrdensServico = GerarListaOrdensServico(manutentor);
             string ordens = OrdemServicoConverterParaTexto(listaOrdensServico);
@@ -166,84 +139,6 @@ namespace Ollama.Aplicacao.Servico
         }
 
 
-
-
-        public string ObterPromptComBaseDocumentos(string assunto, CancellationToken cancellationToken)
-        {
-            // Recupera os trechos de contexto
-            var docs = ObterDocumentos(assunto).ToList();
-            if (docs is null || docs.Count == 0)
-            {
-                return string.Empty;
-            }
-            // Monta o prompt com instruções + contexto relevante
-            var sb = new StringBuilder();
-            sb.AppendLine("Você é um assistente especializado. Use estritamente o contexto abaixo para responder.");
-            sb.AppendLine();
-            sb.AppendLine("--- CONTEXTO RELEVANTE ---");
-            int i = 1;
-            foreach (var d in docs)
-            {
-                sb.AppendLine($"[{i}] {d.Titulo}: {d.Texto}");
-                sb.AppendLine();
-                i++;
-            }
-            sb.AppendLine("--- FIM DO CONTEXTO ---");
-            sb.AppendLine();
-            sb.AppendLine("Pergunta:");
-            sb.AppendLine(assunto);
-            sb.AppendLine();
-            sb.AppendLine("Instrução: Seja objetivo, indique a fonte [n] quando usar um dos trechos acima. Se não houver informação suficiente, admita que não sabe.");
-
-            string promptCompleto = sb.ToString();
-            return promptCompleto;
-        }
-
-        // Busca simples por similaridade: pontua documentos pela frequência de termos (TF simples)
-        private IEnumerable<DocumentoContextoDto> ObterDocumentos(string prompt)
-        {
-            if (string.IsNullOrWhiteSpace(prompt))
-                return Enumerable.Empty<DocumentoContextoDto>();
-
-            // Quebra o prompt em tokens
-            List<string> promptTokens = Tokenizar(prompt);
-
-            // Calcula o score de cada documento
-            var documentosComScore = _documentos.
-                Select(doc => new
-                {
-                    Documento = doc,
-                    Score = CalcularScore(doc, promptTokens)
-                });
-
-            //Filtra apenas os assuntos relevantes
-            var assuntosEncontrados = documentosComScore.Where(x => x.Score > 0).OrderByDescending(x => x.Score).Select(x => x.Documento);
-
-            return assuntosEncontrados;
-        }
-
-        private int CalcularScore(DocumentoContextoDto doc, IEnumerable<string> promptTokens)
-        {
-            var tokensDocumento = Tokenizar($"{doc.Titulo} {doc.Texto}");
-
-            // Conta quantas vezes cada termo aparece nos tokens
-            int score = 0;
-            foreach (var token in promptTokens)
-            {
-                int achou = tokensDocumento.Count(tokenDocumento => tokenDocumento == token);
-                score += achou;
-            }
-
-            return score;
-        }
-
-        private static List<string> Tokenizar(string texto)
-        {
-            if (string.IsNullOrWhiteSpace(texto)) return new();
-            texto = texto.ToLowerInvariant();
-            // remove pontuação e divide por espaço
-            var words = Regex.Split(texto, @"\W+").Where(w => w.Length > 0).ToList();
-            return words;
-        }
+         
     }
 }

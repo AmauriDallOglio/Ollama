@@ -1,23 +1,102 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Ollama.Aplicacao.Dto;
+using Ollama.Aplicacao.Util;
 using System.Text;
 using System.Text.Json;
 
 namespace Ollama.Aplicacao.Servico
 {
+
     public class OllamaServico
     {
+
         private readonly HttpClient _httpClient;
         private readonly AppSettingsDto _appSettings;
         private readonly ILogger<OllamaServico> _logger;
+        private readonly SessaoMemoriaServico _servicoLogInteracao;
 
-        public OllamaServico(HttpClient httpClient, ILogger<OllamaServico> logger, IOptionsMonitor<AppSettingsDto> options)
+        /// <summary>
+        /// Construtor com injeção de dependências dos serviços de busca vetorial, montagem de prompt e log de interação.
+        /// </summary>
+        public OllamaServico(
+            HttpClient httpClient,
+            ILogger<OllamaServico> logger,
+            IOptionsMonitor<AppSettingsDto> options,
+            SessaoMemoriaServico servicoLogInteracao)
         {
             _httpClient = httpClient;
             _logger = logger;
             _appSettings = options.CurrentValue;
+            _servicoLogInteracao = servicoLogInteracao;
         }
+
+        /// <summary>
+        /// Orquestra o fluxo RAG: busca contexto, monta prompt, chama modelo e loga interação.
+        /// </summary>
+        /// <summary>
+        /// Orquestra o fluxo RAG completo: busca contexto, monta prompt, chama modelo e registra log para aprendizado de máquina.
+        /// </summary>
+        /// <param name="pergunta">Pergunta do usuário</param>
+        /// <param name="usuario">Identificação do usuário</param>
+        /// <param name="cancellationToken">Token de cancelamento</param>
+        /// <returns>Resposta do modelo</returns>
+        public async Task<string> ProcessaPerguntaRagAsync(string promptMontado, string usuario, CancellationToken cancellationToken)
+        {
+
+            int tipoServidor = _appSettings.TipoServidor.Tipo;
+            var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
+            if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
+            {
+                _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
+                throw new InvalidOperationException($"Configuração inválida para o tipo de servidor: {tipoServidor}");
+            }
+            var (temperatura, topP) = ObterParametrosTemperatura(EstiloResposta.Rigoroso);
+            var body = new
+            {
+                model = tipoServidorConfig.Modelo,
+                prompt = promptMontado,
+                stream = false,
+                max_tokens = 512,
+                options = new
+                {
+                    temperature = temperatura,
+                    top_p = topP,
+                    language = tipoServidorConfig.Idioma,
+                }
+            };
+            string resposta = string.Empty;
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(tipoServidorConfig.TempoLimiteSegundos));
+                resposta = await EnviarPromptAsync(tipoServidorConfig.UrlBase, body, cts.Token);
+                return resposta;
+            }
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
+                throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
+                throw;
+            }
+            finally
+            {
+                // 5. Registra log da interação para aprendizado supervisionado
+                await _servicoLogInteracao.RegistrarAsync(new SessaoMemoriaDto
+                {
+                    Pergunta = promptMontado,
+                    RespostaModelo = resposta,
+                    Usuario = usuario,
+                    RespostaCorreta = false, // Pode ser atualizado via feedback do usuário
+                    FeedbackUsuario = string.Empty
+                }, cancellationToken);
+            }
+        }
+
 
         public async Task<string> ProcessaPromptAsync(string promptCompleto, CancellationToken cancellationToken)
         {
