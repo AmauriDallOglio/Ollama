@@ -1,5 +1,5 @@
-﻿using Ollama.Api.Util;
-using Ollama.Aplicacao.Dto;
+﻿using Ollama.Api.Configuracao;
+using Ollama.Api.Util;
 using Ollama.Aplicacao.Util;
 
 namespace Ollama.Api
@@ -10,46 +10,28 @@ namespace Ollama.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            ILogger logPipelineBuilder = Configuracao.LogPipelineBuilder(builder);
- 
-            // configura logging nativo .NET
-            Configuracao.ConfigurarDotNetLogging(builder);
+            var ambiente = builder.Environment.IsDevelopment() ? "appsettings.Development.json" : "appsettings.json";
+            PrintaConsole.Alerta($"Configuração: {ambiente}");
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(builder.Environment.ContentRootPath)
+                .AddJsonFile(ambiente, optional: false, reloadOnChange: true)
+                .Build();
 
-            // registra serviços personalizados
-            Configuracao.RegistrarServicos(builder);
 
-            // Adiciona controladores
-            builder.Services.AddControllers();
 
-            //Swagger configurado com título e descrição
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-                {
-                    Title = "Ollama API",
-                    Version = "v1",
-                    Description = "API de integração com o Ollama (Llama3.2)"
-                });
-            });
+            PrintaConsole.Info("Carregando configuração do Logging");
+            ILogger logPipelineBuilder = LoggerConfiguracao.LogPipelineBuilder(builder);
 
-            // Registra o IHttpClientFactory
-            builder.Services.AddHttpClient();
 
-            // Habilita Swagger para teste
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            PrintaConsole.Info("Carregando appsettings");
+            AppSettingsConfiguracao.Carregar(builder.Services, configuration);
 
-            // Adiciona CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
-            });
+
+            PrintaConsole.Info("Carregando injeção dependência");
+            IdConfiguracao.RegistrarServicos(builder);
+
+            PrintaConsole.Info("Carregando configuração do Swagger");
+            ConfiguracaoApi.ConfiguracaoSwagger(builder.Services);
 
             var app = builder.Build();
 
@@ -64,21 +46,19 @@ namespace Ollama.Api
                 await next();
             });
 
-
-            var helper = app.Services.GetRequiredService<HelperConsoleColor>();
-            helper.Informacao("Aplicação iniciando...");
-
-   
+            PrintaConsole.Alerta("Aplicação iniciando");
             app.UseSwagger();
+            PrintaConsole.Alerta("Iniciando UseSwaggerUI");
             app.UseSwaggerUI();
-
-            // app.UseHttpsRedirection(); //HTTPS
+            PrintaConsole.Alerta("Iniciando UseCors");
             app.UseCors("AllowAll");
+            PrintaConsole.Alerta("Iniciando UseAuthorization");
             app.UseAuthorization();
+            PrintaConsole.Alerta("Iniciando MapControllers");
             app.MapControllers();
-
+            PrintaConsole.Alerta("Iniciando UseMiddleware");
             app.UseMiddleware<ErrorMiddleware>();
-
+            PrintaConsole.Alerta("Iniciando Run");
             app.Run();
         }
     }

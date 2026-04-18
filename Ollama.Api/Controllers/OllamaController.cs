@@ -17,14 +17,15 @@ namespace Ollama.Api.Controllers
         private readonly EngenhariaPromptBase _EngenhariaPromptBase;
         private readonly EngenhariaPromptDadosMocados _EngenhariaPromptDadosMocados;
         private readonly SessaoMemoriaServico _servicoLogInteracao;
-
+        private readonly IWebHostEnvironment _env;
         public OllamaController(OllamaServico ollamaServico, 
                                 EngenhariaPromptDocumentos engenhariaPromptServico, 
                                 EngenhariaPromptBase engenhariaPromptBase,
                                 EngenhariaPromptDadosMocados engenhariaPromptDadosMocados,
                                 ILogger<OllamaController> logger,
                                 SessaoMemoriaServico servicoLogInteracao,
-                                HelperConsoleColor helperConsoleColor)
+                                HelperConsoleColor helperConsoleColor,
+                                IWebHostEnvironment env)
         {
             _OllamaServico = ollamaServico;
             _logger = logger;
@@ -33,6 +34,7 @@ namespace Ollama.Api.Controllers
             _EngenhariaPromptBase = engenhariaPromptBase;
             _EngenhariaPromptDadosMocados = engenhariaPromptDadosMocados;
             _servicoLogInteracao = servicoLogInteracao;
+            _env = env;
         }
 
 
@@ -69,6 +71,8 @@ namespace Ollama.Api.Controllers
                 _HelperConsoleColor.Erro($"{resultado.Resposta}");
                 return BadRequest(resposta);
             }
+
+
         }
 
 
@@ -127,6 +131,24 @@ namespace Ollama.Api.Controllers
             return Ok(logs);
         }
 
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadArquivo(IFormFile arquivo)
+        {
+            if (arquivo == null || arquivo.Length == 0)
+                return BadRequest("Nenhum arquivo enviado.");
+
+            var caminho = Path.Combine(_env.ContentRootPath, "uploads", arquivo.FileName);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(caminho)!);
+
+            using (var stream = new FileStream(caminho, FileMode.Create))
+            {
+                await arquivo.CopyToAsync(stream);
+            }
+
+            return Ok(new { mensagem = "Arquivo importado com sucesso", caminho });
+        }
 
         //[HttpGet("PromptGenerativoDados")]
         //public async Task<IActionResult?> PromptGenerativoDados([FromQuery] string pergunta, CancellationToken cancellationToken)
