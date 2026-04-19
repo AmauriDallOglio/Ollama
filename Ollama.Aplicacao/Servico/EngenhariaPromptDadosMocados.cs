@@ -6,9 +6,12 @@ namespace Ollama.Aplicacao.Servico
     public class EngenhariaPromptDadosMocados
     {
         private static readonly Random _random = new Random();
+        private readonly AppSettingsDto _appSettings;
 
-
-
+        public EngenhariaPromptDadosMocados(Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
+        {
+            _appSettings = options.CurrentValue;
+        }
 
         public string PromptOrdemServico(string manutentor)
         {

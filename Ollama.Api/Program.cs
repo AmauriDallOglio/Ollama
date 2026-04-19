@@ -47,6 +47,8 @@ namespace Ollama.Api
             });
 
             PrintaConsole.Alerta("Aplicação iniciando");
+            app.UseMiddleware<ErrorMiddleware>();
+            PrintaConsole.Alerta("Iniciando UseSwagger");
             app.UseSwagger();
             PrintaConsole.Alerta("Iniciando UseSwaggerUI");
             app.UseSwaggerUI();
@@ -56,8 +58,6 @@ namespace Ollama.Api
             app.UseAuthorization();
             PrintaConsole.Alerta("Iniciando MapControllers");
             app.MapControllers();
-            PrintaConsole.Alerta("Iniciando UseMiddleware");
-            app.UseMiddleware<ErrorMiddleware>();
             PrintaConsole.Alerta("Iniciando Run");
             app.Run();
         }

@@ -16,6 +16,7 @@
     public class LogLevelDto
     {
         public string Default { get; set; } = string.Empty;
+        [System.Text.Json.Serialization.JsonPropertyName("Microsoft.AspNetCore")]
         public string MicrosoftAspNetCore { get; set; } = string.Empty;
     }
 

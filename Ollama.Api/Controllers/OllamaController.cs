@@ -132,8 +132,8 @@ namespace Ollama.Api.Controllers
         }
 
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadArquivo(IFormFile arquivo)
+        [HttpPost("ImportarArquivo")]
+        public async Task<IActionResult> ImportarArquivo(IFormFile arquivo)
         {
             if (arquivo == null || arquivo.Length == 0)
                 return BadRequest("Nenhum arquivo enviado.");

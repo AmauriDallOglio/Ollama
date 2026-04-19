@@ -5,10 +5,11 @@ namespace Ollama.Aplicacao.Servico
     public class EngenhariaPromptBase
     {
         private static readonly Random _random = new Random();
+        private readonly AppSettingsDto _appSettings;
 
-        public EngenhariaPromptBase()
+        public EngenhariaPromptBase(Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
         {
-
+            _appSettings = options.CurrentValue;
         }
 
         public string PromptSessao(string pergunta, string sessaoMemoria)

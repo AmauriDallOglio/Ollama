@@ -1,4 +1,4 @@
-﻿namespace Ollama.Dominio.InterfaceRepositorio
+﻿namespace Ollama.Dominio.InterfaceRepositorio.Configurcao
 {
     public interface IGenericoCommandRepositorio<T> where T : class
     {

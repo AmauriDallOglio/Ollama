@@ -7,14 +7,13 @@ namespace Ollama.Aplicacao.Servico
     public class EngenhariaPromptDocumentos
     {
         private static readonly Random _random = new Random();
-
+        private readonly AppSettingsDto _appSettings;
         private readonly List<DocumentoContextoDto> _documentos;
-    
-        public EngenhariaPromptDocumentos(List<DocumentoContextoDto> documentos)
+
+        public EngenhariaPromptDocumentos(List<DocumentoContextoDto> documentos, Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
         {
             _documentos = documentos ?? new List<DocumentoContextoDto>();
-
-
+            _appSettings = options.CurrentValue;
         }
 
 

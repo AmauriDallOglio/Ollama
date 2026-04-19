@@ -1,34 +1,20 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Ollama.Aplicacao.Dto;
-using Ollama.Aplicacao.Util;
+﻿using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
 
-namespace Ollama.Aplicacao.Servico
+namespace Ollama.Servico.Ollama
 {
 
-    public class OllamaServico
+    public class OllamaServico : IOllamaServico
     {
 
         private readonly HttpClient _httpClient;
         private readonly AppSettingsDto _appSettings;
-        private readonly ILogger<OllamaServico> _logger;
-        private readonly SessaoMemoriaServico _servicoLogInteracao;
 
-        /// <summary>
-        /// Construtor com injeção de dependências dos serviços de busca vetorial, montagem de prompt e log de interação.
-        /// </summary>
-        public OllamaServico(
-            HttpClient httpClient,
-            ILogger<OllamaServico> logger,
-            IOptionsMonitor<AppSettingsDto> options,
-            SessaoMemoriaServico servicoLogInteracao)
+        public OllamaServico(HttpClient httpClient, IOptionsMonitor<AppSettingsDto> options)
         {
             _httpClient = httpClient;
-            _logger = logger;
             _appSettings = options.CurrentValue;
-            _servicoLogInteracao = servicoLogInteracao;
         }
 
         /// <summary>
@@ -48,9 +34,11 @@ namespace Ollama.Aplicacao.Servico
             var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
             if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
             {
-                _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
+              //  _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
                 throw new InvalidOperationException($"Configuração inválida para o tipo de servidor: {tipoServidor}");
             }
+
+
             var (temperatura, topP) = ObterParametrosTemperatura(EstiloResposta.Rigoroso);
             var body = new
             {
@@ -75,12 +63,12 @@ namespace Ollama.Aplicacao.Servico
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
-                _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
+                //_logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
                 throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
             }
             catch (TaskCanceledException ex)
             {
-                _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
+               // _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
                 throw;
             }
             finally
@@ -102,12 +90,12 @@ namespace Ollama.Aplicacao.Servico
         {
 
 
-            int tipoServidor = _appSettings.TipoServidor.Tipo;
+          //  int tipoServidor = _appSettings.TipoServidor.Tipo;
             var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
 
             if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
             {
-                _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
+               // _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
                 throw new InvalidOperationException($"Configuração inválida para o tipo de servidor: {tipoServidor}");
             }
 
@@ -137,13 +125,13 @@ namespace Ollama.Aplicacao.Servico
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 // Timeout atingido
-                _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
+               // _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
                 throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
             }
             catch (TaskCanceledException ex)
             {
                 // Cancelamento externo
-                _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
+               // _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
                 throw;
             }
         }
@@ -161,7 +149,7 @@ namespace Ollama.Aplicacao.Servico
             if (!response.IsSuccessStatusCode)
             {
                 var erro = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("Erro Ollama ({Status}): {Erro}", response.StatusCode, erro);
+               // _logger.LogError("Erro Ollama ({Status}): {Erro}", response.StatusCode, erro);
                 throw new HttpRequestException(erro);
             }
 

@@ -13,4 +13,9 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Ollama.Dominio\Ollama.Dominio.csproj" />
+    <ProjectReference Include="..\Ollama.Servico\Ollama.Servico.csproj" />
+  </ItemGroup>
+
 </Project>

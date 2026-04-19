@@ -9,8 +9,8 @@ namespace Ollama.Api.Configuracao
         public static void ConfiguracaoSwagger(this IServiceCollection services)
         {
 
-            services.AddEndpointsApiExplorer();
             PrintaConsole.Info("Carregando configuração swager");
+            services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(options =>
             {
                 options.ConfigurarSwagger();
@@ -27,10 +27,6 @@ namespace Ollama.Api.Configuracao
 
             // Registra o IHttpClientFactory
             services.AddHttpClient();
-
-            // Habilita Swagger para teste
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
         }
 
         private static void ConfigurarSwagger(this SwaggerGenOptions c)

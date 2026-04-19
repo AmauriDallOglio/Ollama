@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Ollama.Aplicacao\Ollama.Aplicacao.csproj" />
     <ProjectReference Include="..\Ollama.Infraestrutura\Ollama.Infraestrutura.csproj" />
+    <ProjectReference Include="..\Ollama.Servico\Ollama.Servico.csproj" />
   </ItemGroup>
 
 </Project>

@@ -8,6 +8,12 @@ namespace Ollama.Aplicacao.Servico
     public class SessaoMemoriaServico
     {
         private readonly List<SessaoMemoriaDto> _logs = new();
+        private readonly AppSettingsDto _appSettings;
+
+        public SessaoMemoriaServico(Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
+        {
+            _appSettings = options.CurrentValue;
+        }
 
         /// <summary>
         /// Registra uma nova interação.
