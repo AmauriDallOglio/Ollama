@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 
 namespace Ollama.Servico.Ollama
@@ -7,42 +6,24 @@ namespace Ollama.Servico.Ollama
 
     public class OllamaServico : IOllamaServico
     {
-
         private readonly HttpClient _httpClient;
-        private readonly AppSettingsDto _appSettings;
+        public static readonly string _servidorLocalNome = "Local";
+        public static readonly string _servidorLocalUrlBase = "http://localhost:11434";
+        public static readonly string _servidorLocalModelo = "llama3.2";
+        public static readonly int _servidorLocalTempoLimiteSegundos = 500;
+        public static readonly string _servidorLocalIdioma = "pt-BR";
 
-        public OllamaServico(HttpClient httpClient, IOptionsMonitor<AppSettingsDto> options)
+        public OllamaServico(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _appSettings = options.CurrentValue;
         }
 
-        /// <summary>
-        /// Orquestra o fluxo RAG: busca contexto, monta prompt, chama modelo e loga interação.
-        /// </summary>
-        /// <summary>
-        /// Orquestra o fluxo RAG completo: busca contexto, monta prompt, chama modelo e registra log para aprendizado de máquina.
-        /// </summary>
-        /// <param name="pergunta">Pergunta do usuário</param>
-        /// <param name="usuario">Identificação do usuário</param>
-        /// <param name="cancellationToken">Token de cancelamento</param>
-        /// <returns>Resposta do modelo</returns>
         public async Task<string> ProcessaPerguntaRagAsync(string promptMontado, string usuario, CancellationToken cancellationToken)
         {
-
-            int tipoServidor = _appSettings.TipoServidor.Tipo;
-            var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
-            if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
-            {
-              //  _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
-                throw new InvalidOperationException($"Configuração inválida para o tipo de servidor: {tipoServidor}");
-            }
-
-
             var (temperatura, topP) = ObterParametrosTemperatura(EstiloResposta.Rigoroso);
             var body = new
             {
-                model = tipoServidorConfig.Modelo,
+                model = _servidorLocalModelo,
                 prompt = promptMontado,
                 stream = false,
                 max_tokens = 512,
@@ -50,60 +31,49 @@ namespace Ollama.Servico.Ollama
                 {
                     temperature = temperatura,
                     top_p = topP,
-                    language = tipoServidorConfig.Idioma,
+                    language = _servidorLocalIdioma,
                 }
             };
             string resposta = string.Empty;
             try
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(tipoServidorConfig.TempoLimiteSegundos));
-                resposta = await EnviarPromptAsync(tipoServidorConfig.UrlBase, body, cts.Token);
+                cts.CancelAfter(TimeSpan.FromSeconds(_servidorLocalTempoLimiteSegundos));
+                resposta = await EnviarPromptAsync(_servidorLocalUrlBase, body, cts.Token);
                 return resposta;
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 //_logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
-                throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
+                throw new TimeoutException($"Tempo limite de {_servidorLocalTempoLimiteSegundos}s atingido para {_servidorLocalModelo}");
             }
             catch (TaskCanceledException ex)
             {
                // _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
                 throw;
             }
-            finally
-            {
-                // 5. Registra log da interação para aprendizado supervisionado
-                await _servicoLogInteracao.RegistrarAsync(new SessaoMemoriaDto
-                {
-                    Pergunta = promptMontado,
-                    RespostaModelo = resposta,
-                    Usuario = usuario,
-                    RespostaCorreta = false, // Pode ser atualizado via feedback do usuário
-                    FeedbackUsuario = string.Empty
-                }, cancellationToken);
-            }
+            //finally
+            //{
+            //    // 5. Registra log da interação para aprendizado supervisionado
+            //    await _servicoLogInteracao.RegistrarAsync(new SessaoMemoriaDto
+            //    {
+            //        Pergunta = promptMontado,
+            //        RespostaModelo = resposta,
+            //        Usuario = usuario,
+            //        RespostaCorreta = false, // Pode ser atualizado via feedback do usuário
+            //        FeedbackUsuario = string.Empty
+            //    }, cancellationToken);
+            //}
         }
 
 
         public async Task<string> ProcessaPromptAsync(string promptCompleto, CancellationToken cancellationToken)
         {
-
-
-          //  int tipoServidor = _appSettings.TipoServidor.Tipo;
-            var tipoServidorConfig = ObterServidorInfo((TipoServidor)tipoServidor);
-
-            if (string.IsNullOrEmpty(tipoServidorConfig.UrlBase))
-            {
-               // _logger.LogError("Configuração inválida para o tipo de servidor: {TipoServidor}", tipoServidor);
-                throw new InvalidOperationException($"Configuração inválida para o tipo de servidor: {tipoServidor}");
-            }
-
             var (temperatura, topP) = ObterParametrosTemperatura(EstiloResposta.Rigoroso);
-
             var body = new
             {
-                model = tipoServidorConfig.Modelo,
+
+                model = _servidorLocalModelo,
                 prompt = promptCompleto,
                 stream = false,
                 max_tokens = 512,
@@ -111,22 +81,23 @@ namespace Ollama.Servico.Ollama
                 {
                     temperature = temperatura,
                     top_p = topP,
-                    language = tipoServidorConfig.Idioma,
+                    language = _servidorLocalIdioma,
                 }
+
             };
 
             try
             {
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(tipoServidorConfig.TempoLimiteSegundos));
+                cts.CancelAfter(TimeSpan.FromSeconds(_servidorLocalTempoLimiteSegundos));
 
-                return await EnviarPromptAsync(tipoServidorConfig.UrlBase, body, cts.Token);
+                return await EnviarPromptAsync(_servidorLocalUrlBase, body, cts.Token);
             }
             catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 // Timeout atingido
-               // _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
-                throw new TimeoutException($"Tempo limite de {tipoServidorConfig.TempoLimiteSegundos}s atingido para {tipoServidor}");
+                // _logger.LogError(ex, "Timeout de {TempoLimite}s atingido para o servidor {TipoServidor}", tipoServidorConfig.TempoLimiteSegundos, tipoServidor);
+                throw new TimeoutException($"Tempo limite de {_servidorLocalTempoLimiteSegundos}s atingido para {_servidorLocalModelo}");
             }
             catch (TaskCanceledException ex)
             {
@@ -173,31 +144,12 @@ namespace Ollama.Servico.Ollama
                     // ignora linha inválida
                 }
             }
-
             return respostaFinal.ToString().Trim();
         }
 
 
-        private TipoServidorSelecionado ObterServidorInfo(TipoServidor tipoServidor)
-        {
-            switch (tipoServidor)
-            {
-                case TipoServidor.ServidorLocal:
-                    return new TipoServidorSelecionado().CarregarLocal(_appSettings);
-
-                case TipoServidor.ServidorDocker:
-                    return new TipoServidorSelecionado().CarregarDocker(_appSettings);
-
-                default:
-                    return new TipoServidorSelecionado();
-            }
-        }
-
-        public enum TipoServidor
-        {
-            ServidorLocal = 0,
-            ServidorDocker = 1
-        }
+    
+         
 
         public enum EstiloResposta
         {
@@ -237,3 +189,110 @@ namespace Ollama.Servico.Ollama
 
     }
 }
+
+//public class EngenhariaPromptDocumentos
+//{
+//    private static readonly Random _random = new Random();
+//    private readonly AppSettingsDto _appSettings;
+
+//    public EngenhariaPromptDocumentos(Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
+//    {
+//        _appSettings = options.CurrentValue;
+//    }
+
+
+//    public async Task<string> ObterPromptComBaseDocumentos(string pergunta, List<DocumentoContextoDto> documentos, CancellationToken cancellationToken)
+//    {
+//        // Recupera os trechos de contexto
+//        var documentosFiltrados = ObterDocumentosComBaseNaPergunta(pergunta, documentos).ToList();
+//        if (documentosFiltrados is null || documentosFiltrados.Count == 0)
+//        {
+//            return string.Empty;
+//        }
+//        // Monta o prompt com instruções + contexto relevante
+//        var sb = new StringBuilder();
+//        sb.AppendLine("Você é um assistente especializado. Use estritamente o contexto abaixo para responder.");
+//        sb.AppendLine();
+//        sb.AppendLine("--- CONTEXTO RELEVANTE ---");
+//        int i = 1;
+//        foreach (var d in documentosFiltrados)
+//        {
+//            sb.AppendLine($"[{i}] {d.Titulo}: {d.Texto}");
+//            sb.AppendLine();
+//            i++;
+//        }
+//        sb.AppendLine("--- FIM DO CONTEXTO ---");
+//        sb.AppendLine();
+//        sb.AppendLine("Pergunta:");
+//        sb.AppendLine(pergunta);
+//        sb.AppendLine();
+//        sb.AppendLine("Instrução: Seja objetivo, indique a fonte [n] quando usar um dos trechos acima. Se não houver informação suficiente, admita que não sabe.");
+
+//        string promptCompleto = sb.ToString();
+
+//        return promptCompleto;
+//    }
+
+//    // Busca simples por similaridade: pontua documentos pela frequência de termos (TF simples)
+//    private IEnumerable<DocumentoContextoDto> ObterDocumentosComBaseNaPergunta(string pergunta, List<DocumentoContextoDto> documentos)
+//    {
+//        if (string.IsNullOrWhiteSpace(pergunta) || documentos == null)
+//            return Enumerable.Empty<DocumentoContextoDto>();
+
+//        // Quebra o prompt em tokens
+//        List<string> tokensPergunta = Tokenizar(pergunta);
+
+//        List<(DocumentoContextoDto Documento, int Score)> documentosComScore = new List<(DocumentoContextoDto, int)>();
+//        foreach (var documento in documentos)
+//        {
+//            var tokensDocumento = Tokenizar($"{documento.Titulo} {documento.Texto}");
+
+//            // Conta quantas vezes cada termo aparece nos tokens
+//            int score = 0;
+//            foreach (var token in tokensPergunta)
+//            {
+//                int achou = tokensDocumento.Count(tokenDocumento => tokenDocumento == token);
+//                score += achou;
+//            }
+//            if (score > 0)
+//            {
+//                documentosComScore.Add((documento, score));
+//            }
+
+//        }
+
+//        //Filtra apenas os assuntos relevantes
+//        var documentosSelecionados = documentosComScore.Where(x => x.Score > 0).OrderByDescending(x => x.Score).Select(x => x.Documento);
+
+//        return documentosSelecionados;
+//    }
+
+
+
+
+//    private static List<string> Tokenizar(string texto)
+//    {
+//        if (string.IsNullOrWhiteSpace(texto)) return new();
+
+//        texto = texto.ToLowerInvariant();
+
+//        // remove pontuação e divide por espaço
+//        var ignorarPalavras = new HashSet<string> {     
+//            "a", "o", "os", "as",
+//            "um", "uma", "uns", "umas",
+//            "de", "do", "da", "dos", "das",
+//            "em", "no", "na", "nos", "nas",
+//            "para", "por", "com", "sem",
+//            "e", "ou", "mas",
+//            "que", "se", "sua", "seu", "suas", "seus",
+//            "ao", "aos", "à", "às",
+//            "sobre", "entre", "até", "após",
+//            "como", "quando", "onde",
+//            "já", "não", "sim"};
+//        var palavras = Regex.Split(texto, @"\W+")     // remove pontuação e divide por espaço
+//            .Where(w => w.Length > 1 && !ignorarPalavras.Contains(w))
+//            .ToList();
+
+//        return palavras;
+//    }
+//}

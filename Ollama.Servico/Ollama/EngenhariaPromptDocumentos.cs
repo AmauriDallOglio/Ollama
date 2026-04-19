@@ -1,27 +1,20 @@
-﻿using Ollama.Aplicacao.Dto;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Ollama.Aplicacao.Servico
+namespace Ollama.Servico.Ollama
 {
-    public class EngenhariaPromptDocumentos
+    public class EngenhariaPromptDocumentos : IEngenhariaPromptDocumentos
     {
         private static readonly Random _random = new Random();
-        private readonly AppSettingsDto _appSettings;
-        private readonly List<DocumentoContextoDto> _documentos;
 
-        public EngenhariaPromptDocumentos(List<DocumentoContextoDto> documentos, Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
-        {
-            _documentos = documentos ?? new List<DocumentoContextoDto>();
-            _appSettings = options.CurrentValue;
-        }
+ 
 
 
-        public async Task<string> ObterPromptComBaseDocumentos(string pergunta, CancellationToken cancellationToken)
+        public async Task<string> ObterPromptComBaseDocumentos(string pergunta, List<DocumentoContextoDto> documentos, CancellationToken cancellationToken)
         {
             // Recupera os trechos de contexto
-            var documentos = ObterDocumentosComBaseNaPergunta(pergunta).ToList();
-            if (documentos is null || documentos.Count == 0)
+            var documentosFiltrados = ObterDocumentosComBaseNaPergunta(pergunta, documentos).ToList();
+            if (documentosFiltrados is null || documentosFiltrados.Count == 0)
             {
                 return string.Empty;
             }
@@ -31,7 +24,7 @@ namespace Ollama.Aplicacao.Servico
             sb.AppendLine();
             sb.AppendLine("--- CONTEXTO RELEVANTE ---");
             int i = 1;
-            foreach (var d in documentos)
+            foreach (var d in documentosFiltrados)
             {
                 sb.AppendLine($"[{i}] {d.Titulo}: {d.Texto}");
                 sb.AppendLine();
@@ -50,16 +43,16 @@ namespace Ollama.Aplicacao.Servico
         }
 
         // Busca simples por similaridade: pontua documentos pela frequência de termos (TF simples)
-        private IEnumerable<DocumentoContextoDto> ObterDocumentosComBaseNaPergunta(string pergunta)
+        private IEnumerable<DocumentoContextoDto> ObterDocumentosComBaseNaPergunta(string pergunta, List<DocumentoContextoDto> documentos)
         {
-            if (string.IsNullOrWhiteSpace(pergunta))
+            if (string.IsNullOrWhiteSpace(pergunta) || documentos == null)
                 return Enumerable.Empty<DocumentoContextoDto>();
 
             // Quebra o prompt em tokens
             List<string> tokensPergunta = Tokenizar(pergunta);
 
             List<(DocumentoContextoDto Documento, int Score)> documentosComScore = new List<(DocumentoContextoDto, int)>();
-            foreach (var documento in _documentos)
+            foreach (var documento in documentos)
             {
                 var tokensDocumento = Tokenizar($"{documento.Titulo} {documento.Texto}");
 
@@ -93,7 +86,7 @@ namespace Ollama.Aplicacao.Servico
             texto = texto.ToLowerInvariant();
 
             // remove pontuação e divide por espaço
-            var ignorarPalavras = new HashSet<string> {     
+            var ignorarPalavras = new HashSet<string> {
                 "a", "o", "os", "as",
                 "um", "uma", "uns", "umas",
                 "de", "do", "da", "dos", "das",
@@ -113,3 +106,5 @@ namespace Ollama.Aplicacao.Servico
         }
     }
 }
+
+

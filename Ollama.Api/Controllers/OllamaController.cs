@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Ollama.Aplicacao.Dto;
+using Ollama.Aplicacao.Rotas.OllamaRota;
 using Ollama.Aplicacao.Servico;
 using Ollama.Aplicacao.Util;
+using Ollama.Servico.Ollama;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 
 namespace Ollama.Api.Controllers
 {
@@ -11,23 +14,29 @@ namespace Ollama.Api.Controllers
     public class OllamaController : ControllerBase
     {
         private readonly ILogger<OllamaController> _logger;
-        private readonly OllamaServico _OllamaServico;
+        private readonly IOllamaServico _iOllamaServico;
         private readonly HelperConsoleColor _HelperConsoleColor;
-        private readonly EngenhariaPromptDocumentos _EngenhariaPromptServico;
+        private readonly IEngenhariaPromptDocumentos _EngenhariaPromptServico;
         private readonly EngenhariaPromptBase _EngenhariaPromptBase;
         private readonly EngenhariaPromptDadosMocados _EngenhariaPromptDadosMocados;
         private readonly SessaoMemoriaServico _servicoLogInteracao;
         private readonly IWebHostEnvironment _env;
-        public OllamaController(OllamaServico ollamaServico, 
-                                EngenhariaPromptDocumentos engenhariaPromptServico, 
+        private readonly PromptHandler _PromptHandler;
+        private readonly PromptGenerativoHandler _PromptGenerativoHandler;
+        public OllamaController( 
+                                IEngenhariaPromptDocumentos engenhariaPromptServico, 
                                 EngenhariaPromptBase engenhariaPromptBase,
                                 EngenhariaPromptDadosMocados engenhariaPromptDadosMocados,
                                 ILogger<OllamaController> logger,
                                 SessaoMemoriaServico servicoLogInteracao,
                                 HelperConsoleColor helperConsoleColor,
-                                IWebHostEnvironment env)
+                                IWebHostEnvironment env,
+                                PromptHandler promptHandler,
+                                IOllamaServico iOllamaServico,
+                                PromptGenerativoHandler promptGenerativoHandler
+            )
         {
-            _OllamaServico = ollamaServico;
+            _iOllamaServico = iOllamaServico;
             _logger = logger;
             _HelperConsoleColor = helperConsoleColor;
             _EngenhariaPromptServico = engenhariaPromptServico;
@@ -35,93 +44,78 @@ namespace Ollama.Api.Controllers
             _EngenhariaPromptDadosMocados = engenhariaPromptDadosMocados;
             _servicoLogInteracao = servicoLogInteracao;
             _env = env;
+            _PromptHandler = promptHandler;
+            _PromptGenerativoHandler = promptGenerativoHandler;
         }
 
 
         [HttpGet("Prompt")]
-        public async Task<IActionResult?> Prompt([FromQuery] string pergunta, CancellationToken cancellationToken)
+        public async Task<IActionResult?> Prompt([FromQuery] PromptRequest request, CancellationToken cancellationToken)
         {
-            var tempo = Stopwatch.StartNew();
+            var resultado = await _PromptHandler.Executar(request, cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(pergunta))
-            {
-                tempo.Stop();
-                ResultadoOperacaoDto dto = new ResultadoOperacaoDto().GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
-
-                _HelperConsoleColor.Erro($"{dto.Resposta}");
-                return BadRequest(dto);
-            }
-
-
-            ResultadoOperacaoDto resultado = new ResultadoOperacaoDto();
-            var resposta = await _OllamaServico.ProcessaPerguntaRagAsync(pergunta, "Sistema", cancellationToken);
-            if (!string.IsNullOrEmpty(resposta))
-            {
-                tempo.Stop();
-                resultado.GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
-                _HelperConsoleColor.Sucesso($"{resultado.Pergunta}");
-                _HelperConsoleColor.Sucesso($"{resultado.Resposta}");
-                return Ok(resposta);
-            }
+            if (resultado.Sucesso)
+                return Ok(resultado.Resultado);
             else
-            {
-                tempo.Stop();
-                resultado.GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
-                _HelperConsoleColor.Erro($"{resultado.Pergunta}");
-                _HelperConsoleColor.Erro($"{resultado.Resposta}");
-                return BadRequest(resposta);
-            }
-
-
+                return BadRequest(resultado.Mensagem);
         }
-
-
 
         [HttpGet("PromptGenerativo")]
-        public async Task<IActionResult?> PromptGenerativo([FromQuery] string pergunta, CancellationToken cancellationToken)
+        public async Task<IActionResult> PromptGenerativo([FromQuery] PromptGenerativoRequest request, CancellationToken cancellationToken)
         {
-            var tempo = Stopwatch.StartNew();
+            var resultado = await _PromptGenerativoHandler.Executar(request, cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(pergunta))
-            {
-                tempo.Stop();
-                ResultadoOperacaoDto dto = new ResultadoOperacaoDto().GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
-
-                _HelperConsoleColor.Erro($"{dto.Resposta}");
-                return BadRequest(dto);
-            }
-
-            string resposta = await _EngenhariaPromptServico.ObterPromptComBaseDocumentos(pergunta, cancellationToken);
-            ResultadoOperacaoDto resultado = new ResultadoOperacaoDto();
-            if (!string.IsNullOrEmpty(resposta))
-            {
-                resposta = await _OllamaServico.ProcessaPerguntaRagAsync(resposta, "Sistema", cancellationToken);
-                if (!string.IsNullOrEmpty(resposta))
-                {
-                    tempo.Stop();
-                    resultado.GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
-                    _HelperConsoleColor.Sucesso($"{resultado.Pergunta}");
-                    _HelperConsoleColor.Sucesso($"{resultado.Resposta}");
-                    return Ok(resposta);
-                }
-                else
-                {
-                    tempo.Stop();
-                    resultado.GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
-                    _HelperConsoleColor.Erro($"{resultado.Pergunta}");
-                    _HelperConsoleColor.Erro($"{resultado.Resposta}");
-                    return BadRequest(resposta);
-                }
-            }
+            if (resultado.Sucesso)
+                return Ok(resultado.Resultado);
             else
-            {
-                tempo.Stop();
-                resultado.GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
-                _HelperConsoleColor.Erro($"{resultado.Pergunta}");
-                _HelperConsoleColor.Erro($"{resultado.Resposta}");
-                return BadRequest(resposta);
-            }
+                return BadRequest(resultado);
         }
+
+        //[HttpGet("PromptGenerativo")]
+        //public async Task<IActionResult?> PromptGenerativo([FromQuery] string pergunta, CancellationToken cancellationToken)
+        //{
+        //    var tempo = Stopwatch.StartNew();
+
+        //    if (string.IsNullOrWhiteSpace(pergunta))
+        //    {
+        //        tempo.Stop();
+        //        ResultadoOperacaoDto dto = new ResultadoOperacaoDto().GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
+
+        //        _HelperConsoleColor.Erro($"{dto.Resposta}");
+        //        return BadRequest(dto);
+        //    }
+
+        //    string resposta = await _EngenhariaPromptServico.ObterPromptComBaseDocumentos(pergunta, cancellationToken);
+        //    ResultadoOperacaoDto resultado = new ResultadoOperacaoDto();
+        //    if (!string.IsNullOrEmpty(resposta))
+        //    {
+        //        resposta = await _iOllamaServico.ProcessaPerguntaRagAsync(resposta, "Sistema", cancellationToken);
+        //        if (!string.IsNullOrEmpty(resposta))
+        //        {
+        //            tempo.Stop();
+        //            resultado.GeraSucesso(pergunta, resposta, tempo.ElapsedMilliseconds);
+        //            _HelperConsoleColor.Sucesso($"{resultado.Pergunta}");
+        //            _HelperConsoleColor.Sucesso($"{resultado.Resposta}");
+        //            return Ok(resposta);
+        //        }
+        //        else
+        //        {
+        //            tempo.Stop();
+        //            resultado.GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
+        //            _HelperConsoleColor.Erro($"{resultado.Pergunta}");
+        //            _HelperConsoleColor.Erro($"{resultado.Resposta}");
+        //            return BadRequest(resposta);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        tempo.Stop();
+        //        resultado.GeraErro(pergunta, "Campos devem ser informados!", tempo.ElapsedMilliseconds);
+        //        _HelperConsoleColor.Erro($"{resultado.Pergunta}");
+        //        _HelperConsoleColor.Erro($"{resultado.Resposta}");
+        //        return BadRequest(resposta);
+        //    }
+        //}
 
 
         [HttpGet("ObterMemoria")]
