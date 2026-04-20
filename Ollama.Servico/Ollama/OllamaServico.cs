@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using Ollama.Servico.Ollama.Dto;
+using Ollama.Servico.Ollama.Interface;
+using System.Text;
 using System.Text.Json;
 
 namespace Ollama.Servico.Ollama
@@ -12,13 +14,14 @@ namespace Ollama.Servico.Ollama
         public static readonly string _servidorLocalModelo = "llama3.2";
         public static readonly int _servidorLocalTempoLimiteSegundos = 500;
         public static readonly string _servidorLocalIdioma = "pt-BR";
-
-        public OllamaServico(HttpClient httpClient)
+        private readonly ISessaoMemoriaServico _ISessaoMemoriaServico;
+        public OllamaServico(HttpClient httpClient, ISessaoMemoriaServico sessaoMemoriaServico)
         {
             _httpClient = httpClient;
+            _ISessaoMemoriaServico = sessaoMemoriaServico;
         }
 
-        public async Task<string> ProcessaPerguntaRagAsync(string promptMontado, string usuario, CancellationToken cancellationToken)
+        public async Task<string> ProcessaEngenhariaPromptDocumentosAsync(string pertunta, string promptMontado, string usuario, CancellationToken cancellationToken)
         {
             var (temperatura, topP) = ObterParametrosTemperatura(EstiloResposta.Rigoroso);
             var body = new
@@ -52,18 +55,20 @@ namespace Ollama.Servico.Ollama
                // _logger.LogWarning(ex, "Operação cancelada externamente para o servidor {TipoServidor}", tipoServidor);
                 throw;
             }
-            //finally
-            //{
-            //    // 5. Registra log da interação para aprendizado supervisionado
-            //    await _servicoLogInteracao.RegistrarAsync(new SessaoMemoriaDto
-            //    {
-            //        Pergunta = promptMontado,
-            //        RespostaModelo = resposta,
-            //        Usuario = usuario,
-            //        RespostaCorreta = false, // Pode ser atualizado via feedback do usuário
-            //        FeedbackUsuario = string.Empty
-            //    }, cancellationToken);
-            //}
+            finally
+            {
+                // 5. Registra log da interação para aprendizado supervisionado
+                await _ISessaoMemoriaServico.RegistrarAsync(new SessaoMemoriaDto
+                {
+                    //IdConversa = string.IsNullOrWhiteSpace(idConversa) ? "conversa-padrao" : idConversa.Trim(),
+                    Pergunta = pertunta,
+                    PromptMontado = promptMontado,
+                    RespostaModelo = resposta,
+                    Usuario = usuario,
+                    RespostaCorreta = false, // Pode ser atualizado via feedback do usuário
+                    FeedbackUsuario = string.Empty
+                }, cancellationToken);
+            }
         }
 
 

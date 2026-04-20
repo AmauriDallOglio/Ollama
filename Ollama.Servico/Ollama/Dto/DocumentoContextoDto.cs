@@ -1,4 +1,4 @@
-﻿namespace Ollama.Servico.Ollama
+﻿namespace Ollama.Servico.Ollama.Dto
 {
     public class DocumentoContextoDto
     {
@@ -14,5 +14,17 @@
             this.Titulo = titulo;
             this.Texto = texto;
         }
+
+        public DocumentoContextoDto Criar(int id, string titulo, string texto) 
+        {
+            new DocumentoContextoDto
+            {
+                Id = id,
+                Titulo = titulo,
+                Texto = texto
+            };
+            return this;
+        }
+
     }
 }

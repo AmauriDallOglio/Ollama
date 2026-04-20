@@ -11,7 +11,7 @@ namespace Ollama.Aplicacao.Rotas.SessaoRota
         public string? ContextosUtilizados { get; set; }
         public bool RespostaCorreta { get; set; } = false;
         public string? FeedbackUsuario { get; set; }
-        public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+        public DateTime DataCriacao { get; set; } = DateTime.Now;
         public DateTime? DataAtualizacao { get; set; }
 
         public static ObterTodosSessaoResponse Criar(Sessao entidade)

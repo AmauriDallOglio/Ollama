@@ -74,7 +74,11 @@ namespace Ollama.Api.Configuracao
         private static void Controllers(this IServiceCollection services)
         {
 
-            services.AddControllers();
+           // services.AddControllers();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.WriteIndented = true; // deixa o JSON "bonito"
+            }); 
 
         }
 

@@ -1,5 +1,5 @@
 ﻿using Ollama.Aplicacao.Util;
-using Ollama.Servico.Ollama;
+using Ollama.Servico.Ollama.Interface;
 using System.Diagnostics;
 
 namespace Ollama.Aplicacao.Rotas.OllamaRota
@@ -23,7 +23,7 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
                 return ResultadoOperacao.GerarErro("Campos devem ser informados!", 400);
             }
 
-            var resposta = await _ollamaServico.ProcessaPerguntaRagAsync(request.Pergunta, "Sistema", cancellationToken);
+            var resposta = await _ollamaServico.ProcessaPromptAsync(request.Pergunta, cancellationToken);
 
             tempo.Stop();
 

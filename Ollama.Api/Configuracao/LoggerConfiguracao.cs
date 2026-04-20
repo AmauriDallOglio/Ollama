@@ -41,36 +41,19 @@ namespace Ollama.Api.Configuracao
 
 
             //  Ou nível global
-            builder.Logging.SetMinimumLevel(LogLevel.Debug);
-
-            builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Information);
-            // builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Query", LogLevel.Debug);
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 
-            //// ----------------------------------------------
-            //// CRIAR LOGGER TEMPORÁRIO MANUAL
-            //// (funciona ANTES do app.Build())
-            //// ----------------------------------------------
+            ////Isso faz com que comandos SQL (queries) apareçam no log com nível Information.
+            //builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Information);
+            //Para ocultar essas queries, basta aumentar o nível para Warning ou Error: Assim, apenas avisos e erros do EF Core aparecerão, e as queries SQL não serão mais exibidas no log.
+            builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Error);
 
 
-            //_loggerTemp = LoggerFactory.Create(logging =>
-            //{
-            //    logging.AddConsole();
-            //    logging.AddDebug();
-            //}).CreateLogger("PipelineBuilder");
+            // ================================================================
+            //  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
+            // ================================================================
 
-            //_loggerTemp.LogWarning(" ***** Amauri Versão 1.0 ***** ");
-            //_loggerTemp.LogInformation(" Logging nativo configurado para o builder.");
-            //_loggerTemp.LogWarning(" Pipeline do builder iniciado.");
-            //_loggerTemp.LogInformation(" Azure Log Diagnostics configurado.");
-
-        }
-
-        // ================================================================
-        //  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
-        // ================================================================
-        public static ILogger LogPipelineBuilder(WebApplicationBuilder builder)
-        {
             _loggerDotNet = LoggerFactory.Create(logging =>
             {
                 logging.AddConsole();
@@ -82,16 +65,44 @@ namespace Ollama.Api.Configuracao
             _loggerDotNet.LogWarning("  Teste do alerta ");
             _loggerDotNet.LogInformation(" Teste do info  ");
             _loggerDotNet.LogError(" Teste do error ");
- 
+
 
             // Logs via PrintaConsole (coloridos + ILogger)
             PrintaConsole.Alerta(" Teste do alerta ");
             PrintaConsole.Info(" Teste do info ");
             PrintaConsole.Error(" Teste do error ");
+
+
+           
+
+        }
+
+        //// ================================================================
+        ////  NOVO MÉTODO — REGISTRO DE SERVIÇOS (exclusivo!)
+        //// ================================================================
+        //public static ILogger LogPipelineBuilder(WebApplicationBuilder builder)
+        //{
+        //    _loggerDotNet = LoggerFactory.Create(logging =>
+        //    {
+        //        logging.AddConsole();
+        //        logging.AddDebug();
+        //    }).CreateLogger("LogPipelineBuilder");
+
+        //    PrintaConsole.ConfigurarLogger(_loggerDotNet);
+
+        //    _loggerDotNet.LogWarning("  Teste do alerta ");
+        //    _loggerDotNet.LogInformation(" Teste do info  ");
+        //    _loggerDotNet.LogError(" Teste do error ");
  
 
-            return _loggerDotNet;
-        }
+        //    // Logs via PrintaConsole (coloridos + ILogger)
+        //    PrintaConsole.Alerta(" Teste do alerta ");
+        //    PrintaConsole.Info(" Teste do info ");
+        //    PrintaConsole.Error(" Teste do error ");
+ 
+
+        //    return _loggerDotNet;
+        //}
 
     }
 }

@@ -20,7 +20,8 @@ namespace Ollama.Api
 
 
             PrintaConsole.Info("Carregando configuração do Logging");
-            ILogger logPipelineBuilder = LoggerConfiguracao.LogPipelineBuilder(builder);
+            LoggerConfiguracao.ConfigurarDotNetLogging(builder);
+         //   ILogger logPipelineBuilder = LoggerConfiguracao.LogPipelineBuilder(builder);
 
 
             PrintaConsole.Info("Carregando appsettings");
@@ -32,6 +33,10 @@ namespace Ollama.Api
 
             PrintaConsole.Info("Carregando configuração do Swagger");
             ConfiguracaoApi.ConfiguracaoSwagger(builder.Services);
+
+            PrintaConsole.Info("Carregando tarefa");
+            builder.Services.AddHostedService<TarefaSessaoMemoria>();
+
 
             var app = builder.Build();
 

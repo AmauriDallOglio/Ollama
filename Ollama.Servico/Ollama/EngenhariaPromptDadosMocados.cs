@@ -1,16 +1,16 @@
-﻿using Ollama.Aplicacao.Dto;
+﻿using Ollama.Servico.Ollama.Dto;
+using Ollama.Servico.Ollama.Interface;
 using System.Text;
 
 namespace Ollama.Aplicacao.Servico
 {
-    public class EngenhariaPromptDadosMocados
+    public class EngenhariaPromptDadosMocados : IEngenhariaPromptDadosMocados
     {
         private static readonly Random _random = new Random();
-        private readonly AppSettingsDto _appSettings;
 
-        public EngenhariaPromptDadosMocados(Microsoft.Extensions.Options.IOptionsMonitor<AppSettingsDto> options)
+        public EngenhariaPromptDadosMocados()
         {
-            _appSettings = options.CurrentValue;
+
         }
 
         public string PromptOrdemServico(string manutentor)

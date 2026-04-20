@@ -9,7 +9,7 @@
         public string? TipoArquivo { get; set; }   // PDF, TXT, DOCX
         public long? TamanhoArquivo { get; set; }  // em bytes
 
-        public DateTime DataImportacao { get; set; } = DateTime.UtcNow;
+        public DateTime DataImportacao { get; set; } = DateTime.Now;
         public DateTime? DataAtualizacao { get; set; }
 
         protected Documento() { }
@@ -23,7 +23,7 @@
                 Texto = SanitizarTexto(texto),
                 TipoArquivo = tipoArquivo,
                 TamanhoArquivo = tamanhoArquivo,
-                DataImportacao = DateTime.UtcNow
+                DataImportacao = DateTime.Now
             };
         }
 
@@ -41,7 +41,7 @@
         public void AtualizarTexto(string novoTexto)
         {
             Texto = SanitizarTexto(novoTexto);
-            DataAtualizacao = DateTime.UtcNow;
+            DataAtualizacao = DateTime.Now;
         }
 
 
@@ -52,7 +52,7 @@
         {
             TipoArquivo = tipoArquivo;
             TamanhoArquivo = tamanhoArquivo;
-            DataAtualizacao = DateTime.UtcNow;
+            DataAtualizacao = DateTime.Now;
         }
 
 

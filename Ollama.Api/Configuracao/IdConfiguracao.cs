@@ -7,6 +7,7 @@ using Ollama.Aplicacao.Util;
 using Ollama.Dominio.InterfaceRepositorio;
 using Ollama.Infraestrutura.Repositorio;
 using Ollama.Servico.Ollama;
+using Ollama.Servico.Ollama.Interface;
 
 namespace Ollama.Api.Configuracao
 {
@@ -26,13 +27,15 @@ namespace Ollama.Api.Configuracao
             builder.Services.AddScoped<IContratoBaseHandler<ObterTodosDocumentoRequest, ResultadoOperacao>, ObterTodosDocumentoHandler>();
             builder.Services.AddScoped<IContratoBaseHandler<ImportarDocumentoRequest, ResultadoOperacao>, ImportarDocumentoHandler>();
             builder.Services.AddScoped<IContratoBaseHandler<PromptRequest, ResultadoOperacao>, PromptHandler>();
+
+            builder.Services.AddScoped<PromptGenerativoDadosMocadosHandler>();
             builder.Services.AddScoped<PromptHandler>();
             builder.Services.AddScoped<PromptGenerativoHandler>();
-            builder.Services.AddScoped<IEngenhariaPromptDocumentos, EngenhariaPromptDocumentos>();
+ 
 
 
             // Serviços para RAG e aprendizado de máquina
-            builder.Services.AddScoped<SessaoMemoriaServico>();
+            builder.Services.AddSingleton<ISessaoMemoriaServico, SessaoMemoriaServico>();
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -42,9 +45,9 @@ namespace Ollama.Api.Configuracao
             builder.Services.AddScoped<HelperConsoleColor>();
             builder.Services.AddHttpClient<OllamaServico>();
             builder.Services.AddScoped<IOllamaServico, OllamaServico>();
-            //builder.Services.AddScoped<EngenhariaPromptDocumentos>();
-            builder.Services.AddScoped<EngenhariaPromptBase>();
-            builder.Services.AddScoped<EngenhariaPromptDadosMocados>();
+            builder.Services.AddSingleton<IEngenhariaPromptDadosMocados, EngenhariaPromptDadosMocados>();
+            builder.Services.AddScoped<IEngenhariaPromptDocumentos, EngenhariaPromptDocumentos>();
+
             builder.Services.AddScoped<ISessaoCommandRepositorio, SessaoCommandRepositorio>();
             builder.Services.AddScoped<IDocumentoCommandRepositorio, DocumentoCommandRepositorio>();
      

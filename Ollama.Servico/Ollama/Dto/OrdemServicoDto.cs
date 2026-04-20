@@ -1,4 +1,4 @@
-﻿namespace Ollama.Aplicacao.Dto
+﻿namespace Ollama.Servico.Ollama.Dto
 {
     public class OrdemServicoDto
     {
