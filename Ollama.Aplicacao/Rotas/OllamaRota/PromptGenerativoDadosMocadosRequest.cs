@@ -4,6 +4,6 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
 {
     public class PromptGenerativoDadosMocadosRequest : IRequest<ResultadoOperacao>
     {
-        public string Manutentor { get; set; } = "Amauri";
+        public string Pergunta { get; set; } = "Amauri";
     }
 }

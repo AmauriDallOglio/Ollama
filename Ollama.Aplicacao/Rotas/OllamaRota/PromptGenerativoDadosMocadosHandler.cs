@@ -22,7 +22,7 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
             var tempo = Stopwatch.StartNew();
 
             // 1. Monta o prompt com dados mocados
-            string prompt = _engenhariaPromptDadosMocados.PromptOrdemServicoHtml(request.Manutentor);
+            string prompt = _engenhariaPromptDadosMocados.PromptOrdemServicoHtml(request.Pergunta);
 
             // 2. Processa no Ollama
             string resposta = await _ollamaServico.ProcessaPromptAsync(prompt, cancellationToken);

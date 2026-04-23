@@ -11,7 +11,7 @@
         public bool RespostaCorreta { get; set; } = false;
         public string? FeedbackUsuario { get; set; }
 
-        public DateTime DataCriacao { get; set; } = DateTime;
+        public DateTime DataCriacao { get; set; } = DateTime.Now;
         public DateTime? DataAtualizacao { get; set; }
     }
 }

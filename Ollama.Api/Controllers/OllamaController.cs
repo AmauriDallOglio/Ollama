@@ -63,19 +63,19 @@ namespace Ollama.Api.Controllers
         }
 
 
-        //[HttpGet("PromptGenerativoDadosMocados")]
-        //public async Task<IActionResult> PromptGenerativoDadosMocados(CancellationToken cancellationToken)
-        //{
-        //    var request = new PromptGenerativoDadosMocadosRequest { Manutentor = "Amauri" };
-        //    var resultado = await _PromptGenerativoDadosMocadosHandler.Executar(request, cancellationToken);
+        [HttpGet("PromptGenerativoDadosMocados")]
+        public async Task<IActionResult> PromptGenerativoDadosMocados([FromQuery] PromptGenerativoDadosMocadosRequest request, CancellationToken cancellationToken)
+        {
+            //var request = new PromptGenerativoDadosMocadosRequest { Pergunta = "Amauri" };
+            var resultado = await _PromptGenerativoDadosMocadosHandler.Executar(request, cancellationToken);
 
-        //    if (resultado.Sucesso)
-        //        return Ok(resultado.Resultado);
-        //    else
-        //        return BadRequest(resultado.Mensagem);
-        //}
+            if (resultado.Sucesso)
+                return Ok(resultado.Resultado);
+            else
+                return BadRequest(resultado.Mensagem);
+        }
 
 
-         
+
     }
 }
