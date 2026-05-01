@@ -18,13 +18,10 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
         private static DateTime _ultimaAtualizacaoCacheDocumentos = DateTime.MinValue;
         private static List<DocumentoContextoDto> _cacheDocumentos = new();
 
-        private const int QuantidadeMaximaHistoricoConversa = 4;
-
         public PromptGenerativoHandler(
             IEngenhariaPromptDocumentos engenhariaPromptDocumentos,
             IDocumentoCommandRepositorio documentoCommandRepositorio,
-            IOllamaServico ollamaServico,
-            ISessaoMemoriaServico sessaoMemoriaServico)
+            IOllamaServico ollamaServico)
         {
             _engenhariaPromptDocumentos = engenhariaPromptDocumentos;
             _ollamaServico = ollamaServico;
@@ -42,18 +39,19 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
                 return ResultadoOperacao.GerarErro("Campos devem ser informados!", 400);
             }
 
-            List<DocumentoContextoDto> documentos = await ObterDocumentosCacheadosAsync(cancellationToken);
-            //List<SessaoMemoriaDto> historicoConversa = await _sessaoMemoriaServico.ObterUltimasInteracoesPorConversaAsync(idConversa, QuantidadeMaximaHistoricoConversa, cancellationToken);
+            //Carrega os documentos
+            List<DocumentoContextoDto> documentos = await CarregarDocumentos(cancellationToken);
 
-            string promptGenerativo = await _engenhariaPromptDocumentos.ObterPromptComBaseDocumentos(request.Pergunta, documentos, cancellationToken);
-
+            //Valida se tem documentos para processar
+            string promptGenerativo = await _engenhariaPromptDocumentos.GerarPrompt(request.Pergunta, documentos, cancellationToken);
             if (string.IsNullOrEmpty(promptGenerativo))
             {
                 tempo.Stop();
                 return ResultadoOperacao.GerarErro("Desculpe, nao encontrei informacoes sobre isso na minha base de dados.", 500);
             }
 
-            string resposta = await _ollamaServico.ProcessaEngenhariaPromptDocumentosAsync(request.Pergunta, promptGenerativo, "Sistema", cancellationToken);
+            //Chama o serviço do Ollama para processar o prompt
+            string resposta = await _ollamaServico.ProcessaPromptDocumentosAsync(request.Pergunta, promptGenerativo, "Sistema", cancellationToken);
 
             tempo.Stop();
             if (!string.IsNullOrEmpty(resposta))
@@ -61,20 +59,15 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
                 PromptGenerativoResponse response = PromptGenerativoResponse.Criar(request.Pergunta, resposta, tempo.ElapsedMilliseconds);
                 return ResultadoOperacao.GerarSucesso(response);
             }
-
             return ResultadoOperacao.GerarErro("Nao foi possivel gerar resposta.", 500);
         }
 
-        private async Task<List<DocumentoContextoDto>> ObterDocumentosCacheadosAsync(CancellationToken cancellationToken)
+        private async Task<List<DocumentoContextoDto>> CarregarDocumentos(CancellationToken cancellationToken)
         {
-            DateTime agora = DateTime.Now;
-            if (_cacheDocumentos.Count > 0 && (agora - _ultimaAtualizacaoCacheDocumentos) <= _tempoValidadeCacheDocumentos)
-                return _cacheDocumentos;
-
             await _semaforoCacheDocumentos.WaitAsync(cancellationToken);
             try
             {
-                agora = DateTime.Now;
+                DateTime agora = DateTime.Now;
                 if (_cacheDocumentos.Count > 0 && (agora - _ultimaAtualizacaoCacheDocumentos) <= _tempoValidadeCacheDocumentos)
                     return _cacheDocumentos;
 
