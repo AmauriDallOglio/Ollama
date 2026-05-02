@@ -12,14 +12,12 @@ namespace Ollama.Api.Controllers
         private readonly PromptHandler _PromptHandler;
         private readonly PromptGenerativoHandler _PromptGenerativoHandler;
         private readonly ISessaoMemoriaServico _ISessaoMemoriaServico;
-        private readonly IEngenhariaPromptDadosMocados _EngenhariaPromptDadosMocados;
         private readonly PromptGenerativoDadosMocadosHandler _PromptGenerativoDadosMocadosHandler;
         public OllamaController(
             ISessaoMemoriaServico iSessaoMemoriaServico,
             IWebHostEnvironment env,
             PromptHandler promptHandler,
             PromptGenerativoHandler promptGenerativoHandler,
-            IEngenhariaPromptDadosMocados engenhariaPromptDadosMocados,
             PromptGenerativoDadosMocadosHandler promptGenerativoDadosMocadosHandler
             )
         {
@@ -27,7 +25,6 @@ namespace Ollama.Api.Controllers
             _env = env;
             _PromptHandler = promptHandler;
             _PromptGenerativoHandler = promptGenerativoHandler;
-            _EngenhariaPromptDadosMocados = engenhariaPromptDadosMocados;
             _PromptGenerativoDadosMocadosHandler = promptGenerativoDadosMocadosHandler;
         }
 

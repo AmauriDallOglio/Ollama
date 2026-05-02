@@ -6,14 +6,12 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
 {
     public class PromptGenerativoDadosMocadosHandler : IContratoBaseHandler<PromptGenerativoDadosMocadosRequest, ResultadoOperacao>
     {
-        private readonly IEngenhariaPromptDadosMocados _engenhariaPromptDadosMocados;
+      
         private readonly IOllamaServico _ollamaServico;
 
         public PromptGenerativoDadosMocadosHandler(
-            IEngenhariaPromptDadosMocados engenhariaPromptDadosMocados, 
             IOllamaServico ollamaServico)
         {
-            _engenhariaPromptDadosMocados = engenhariaPromptDadosMocados;
             _ollamaServico = ollamaServico;
         }
 
@@ -22,10 +20,10 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
             var tempo = Stopwatch.StartNew();
 
             // 1. Monta o prompt com dados mocados
-            string prompt = _engenhariaPromptDadosMocados.PromptOrdemServicoHtml(request.Pergunta);
+            string prompt = _ollamaServico.PromptOrdemServicoHtml(request.Pergunta);
 
             // 2. Processa no Ollama
-            string resposta = await _ollamaServico.ProcessaPromptAsync(prompt, cancellationToken);
+            string resposta = await _ollamaServico.ExecutaPromptAsync(prompt, cancellationToken);
 
             tempo.Stop();
 

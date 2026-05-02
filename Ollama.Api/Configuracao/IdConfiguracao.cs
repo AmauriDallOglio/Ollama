@@ -45,8 +45,8 @@ namespace Ollama.Api.Configuracao
             builder.Services.AddScoped<HelperConsoleColor>();
             builder.Services.AddHttpClient<OllamaServico>();
             builder.Services.AddScoped<IOllamaServico, OllamaServico>();
-            builder.Services.AddSingleton<IEngenhariaPromptDadosMocados, EngenhariaPromptDadosMocados>();
-            builder.Services.AddScoped<IEngenhariaPromptDocumentos, EngenhariaPromptDocumentos>();
+ 
+    
 
             builder.Services.AddScoped<ISessaoCommandRepositorio, SessaoCommandRepositorio>();
             builder.Services.AddScoped<IDocumentoCommandRepositorio, DocumentoCommandRepositorio>();

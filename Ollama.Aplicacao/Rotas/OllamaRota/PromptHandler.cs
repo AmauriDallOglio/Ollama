@@ -23,7 +23,7 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
                 return ResultadoOperacao.GerarErro("Campos devem ser informados!", 400);
             }
 
-            var resposta = await _ollamaServico.ProcessaPromptAsync(request.Pergunta, cancellationToken);
+            var resposta = await _ollamaServico.ExecutaPromptAsync(request.Pergunta, cancellationToken);
 
             tempo.Stop();
 

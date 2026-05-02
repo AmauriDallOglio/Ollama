@@ -8,7 +8,6 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
 {
     public class PromptGenerativoHandler : IContratoBaseHandler<PromptGenerativoRequest, ResultadoOperacao>
     {
-        private readonly IEngenhariaPromptDocumentos _engenhariaPromptDocumentos;
         private readonly IOllamaServico _ollamaServico;
         private readonly IDocumentoCommandRepositorio _documentoCommandRepositorio;
         //private readonly ISessaoMemoriaServico _sessaoMemoriaServico;
@@ -19,11 +18,9 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
         private static List<DocumentoContextoDto> _cacheDocumentos = new();
 
         public PromptGenerativoHandler(
-            IEngenhariaPromptDocumentos engenhariaPromptDocumentos,
             IDocumentoCommandRepositorio documentoCommandRepositorio,
             IOllamaServico ollamaServico)
         {
-            _engenhariaPromptDocumentos = engenhariaPromptDocumentos;
             _ollamaServico = ollamaServico;
             _documentoCommandRepositorio = documentoCommandRepositorio;
            // _sessaoMemoriaServico = sessaoMemoriaServico;
@@ -39,27 +36,21 @@ namespace Ollama.Aplicacao.Rotas.OllamaRota
                 return ResultadoOperacao.GerarErro("Campos devem ser informados!", 400);
             }
 
-            //Carrega os documentos
             List<DocumentoContextoDto> documentos = await CarregarDocumentos(cancellationToken);
-
-            //Valida se tem documentos para processar
-            string promptGenerativo = await _engenhariaPromptDocumentos.GerarPrompt(request.Pergunta, documentos, cancellationToken);
-            if (string.IsNullOrEmpty(promptGenerativo))
+            string resultado = await _ollamaServico.GerarPromptGenerativo(request.Pergunta, documentos, cancellationToken);
+            if (string.IsNullOrEmpty(resultado))
             {
                 tempo.Stop();
-                return ResultadoOperacao.GerarErro("Desculpe, nao encontrei informacoes sobre isso na minha base de dados.", 500);
+                return ResultadoOperacao.GerarErro("Desculpe, não encontrei informações sobre isso na minha base de dados.", 500);
             }
-
-            //Chama o serviço do Ollama para processar o prompt
-            string resposta = await _ollamaServico.ProcessaPromptDocumentosAsync(request.Pergunta, promptGenerativo, "Sistema", cancellationToken);
 
             tempo.Stop();
-            if (!string.IsNullOrEmpty(resposta))
+            if (!string.IsNullOrEmpty(resultado))
             {
-                PromptGenerativoResponse response = PromptGenerativoResponse.Criar(request.Pergunta, resposta, tempo.ElapsedMilliseconds);
+                PromptGenerativoResponse response = PromptGenerativoResponse.Criar(request.Pergunta, resultado, tempo.ElapsedMilliseconds);
                 return ResultadoOperacao.GerarSucesso(response);
             }
-            return ResultadoOperacao.GerarErro("Nao foi possivel gerar resposta.", 500);
+            return ResultadoOperacao.GerarErro("Não foi possivel gerar resposta.", 500);
         }
 
         private async Task<List<DocumentoContextoDto>> CarregarDocumentos(CancellationToken cancellationToken)
