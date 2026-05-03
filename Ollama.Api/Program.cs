@@ -61,6 +61,9 @@ namespace Ollama.Api
             app.UseCors("AllowAll");
             PrintaConsole.Alerta("Iniciando UseAuthorization");
             app.UseAuthorization();
+            PrintaConsole.Alerta("Iniciando Prometheus");
+            app.MapPrometheusScrapingEndpoint().AllowAnonymous();
+
             PrintaConsole.Alerta("Iniciando MapControllers");
             app.MapControllers();
             PrintaConsole.Alerta("Iniciando Run");

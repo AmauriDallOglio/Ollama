@@ -1,5 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 using Ollama.Aplicacao.Util;
+using OpenTelemetry.Metrics;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Ollama.Api.Configuracao
@@ -24,10 +25,47 @@ namespace Ollama.Api.Configuracao
             Autorizacao(services);
             PrintaConsole.Info("Carregando CORS");
             Cors(services);
-
+            Prometheus(services);
             // Registra o IHttpClientFactory
             services.AddHttpClient();
         }
+
+
+        private static void Prometheus(this IServiceCollection services)
+        {
+
+            /*
+             * 
+                Isso vai fazer sua API expor métricas para o Prometheus coletar automaticamente.
+
+                A API publica /metrics com dados técnicos (requisições, duração, status HTTP, etc.).
+                O Prometheus (em http://localhost:9090/targets) consulta http://localhost:5135/metrics a cada 5s (seu scrape_interval).
+                No Targets, o job autenticacaojwt fica UP quando a coleta funciona.
+                Depois você pode criar gráficos/alertas (normalmente no Grafana) com essas métricas.
+                O ajuste no middleware foi crucial porque:
+
+                <OpenTelemetry.Exporter.Prometheus.AspNetCore Version="1.15.3-beta.1" />
+                <OpenTelemetry.Extensions.Hosting Version="1.15.3" />
+                <OpenTelemetry.Instrumentation.AspNetCore Version="1.15.2" />
+                <OpenTelemetry.Instrumentation.Http Version="1.15.1" />
+
+                Antes ele exigia token em /metrics, então o Prometheus travava/expirava.
+                Agora /metrics passa livre, sem autenticação, só para monitoramento.
+                Resumo: você ganhou observabilidade real da API, sem impactar autenticação dos endpoints de negócio. 
+             * 
+             */
+
+
+            services.AddOpenTelemetry()
+                .WithMetrics(metrics =>
+                {
+                    metrics.AddAspNetCoreInstrumentation()
+                           .AddHttpClientInstrumentation()
+                           .AddPrometheusExporter();
+                });
+        }
+
+
 
         private static void ConfigurarSwagger(this SwaggerGenOptions c)
         {

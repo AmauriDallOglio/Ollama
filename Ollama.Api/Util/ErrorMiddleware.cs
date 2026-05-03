@@ -16,6 +16,13 @@ namespace Ollama.Api.Util
 
         public async Task Invoke(HttpContext context)
         {
+            //Prometheus
+            if (context.Request.Path.StartsWithSegments("/metrics") || context.Request.Path.StartsWithSegments("/swagger"))
+            {
+                await _next(context);
+                return;
+            }
+
             var tempo = Stopwatch.StartNew();
             try
             {
